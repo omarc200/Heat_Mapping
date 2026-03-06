@@ -8,10 +8,10 @@
 - [ ] GitHub Pages enabled
 
 ## Task 2
-- [ ] Full-screen layout with sidebar + map container
-- [ ] SceneView loads
-- [ ] Basemap switch works
-- [ ] Widgets added
+- [X] Full-screen layout with sidebar + map container
+- [X] SceneView loads
+- [X] Basemap switch works
+- [X] Widgets added
 
 ## Task 3
 - [ ] 2D/3D toggle button
