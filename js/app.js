@@ -63,12 +63,34 @@ const toggleButton = document.getElementById("toggle3D");
 toggleButton.addEventListener("click", function(){
     is3DMode = !is3DMode;
 
+    const currentCenter = view.center.clone();
+    const currentScale = view.scale;
+
     if(is3DMode){
         open3DBuildings.visible = true;
         toggleButton.textContent = "Switch to 2D";
+
+        view.goTo({
+            center: currentCenter,
+            scale: currentScale,
+            tilt:60,
+            heading:30
+
+        }, {
+            duration: 1500
+        });
     } else {
         open3DBuildings.visible = false;
         toggleButton.textContent = "Switch to 3D";
+
+        view.goTo({
+            center: currentCenter,
+            scale: currentScale,
+            tilt: 0,
+            heading: 0
+        },{
+            duration: 1500
+        });
     }
 });
 
