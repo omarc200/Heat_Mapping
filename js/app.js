@@ -6,8 +6,9 @@ require([
   "esri/widgets/Home",
   "esri/widgets/ScaleBar",
   "esri/widgets/Fullscreen",
-  "esri/layers/SceneLayer"
-], function(Map, SceneView, Home, ScaleBar, Fullscreen, SceneLayer) {
+  "esri/layers/SceneLayer",
+  "esri/widgets/BasemapToggle"
+], function(Map, SceneView, Home, ScaleBar, Fullscreen, SceneLayer, BasemapToggle) {
 
   const map = new Map({
     basemap: "streets-vector"
@@ -49,6 +50,13 @@ const scaleBar = new ScaleBar({
   });
 
   view.ui.add(fullscreen, "top-right");
+
+const basemapToggle = new BasemapToggle({
+  view: view,
+  nextBasemap: "satellite"
+});
+
+view.ui.add(basemapToggle, "bottom-right");
 
 const basemapSelect = document.getElementById("basemapSelect");
 
