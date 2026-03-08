@@ -41,3 +41,21 @@ body {
   border-left: 1px solid #ccc;
 }
 
+/* ---- 2D/3D toggle button ---- */
+#toggle-3d-btn {
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #aaaaaa;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  min-width: 36px;
+}
+
+#toggle-3d-btn:hover {
+  background-color: #e2e2e2;
+}
+
