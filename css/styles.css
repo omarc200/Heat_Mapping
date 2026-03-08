@@ -21,3 +21,65 @@ html, body {
 #viewDiv {
   flex: 1;
 }
+
+/* ==========================================================================
+   LAYER CONTROL PANEL
+   ========================================================================== */
+
+#layer-panel {
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.85rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+#layer-panel-toggle {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+  user-select: none;
+}
+
+#layer-panel-toggle:hover {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+/* When collapsed, hide the checkbox list */
+.layer-panel-collapsed #layer-panel-content {
+  display: none;
+}
+
+/* When expanded, show the checkbox list */
+.layer-panel-expanded #layer-panel-content {
+  display: block;
+  padding: 4px 12px 10px 12px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Each layer row */
+.layer-row {
+  display: block;
+  padding: 5px 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.layer-row:hover {
+  color: #0079c1;
+}
+
+/* Indented sub-layers */
+.layer-indent {
+  padding-left: 20px;
+  font-size: 0.8rem;
+}
+
+.layer-checkbox {
+  margin-right: 6px;
+  vertical-align: middle;
+}
