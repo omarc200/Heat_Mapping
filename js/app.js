@@ -1,119 +1,105 @@
+// require is part of the ArcGIS modules
 require([
+// MapView is 2D; SceneView is 3D
   "esri/Map",
   "esri/views/SceneView",
+  "esri/widgets/Home",
+  "esri/widgets/ScaleBar",
+  "esri/widgets/Fullscreen",
   "esri/layers/SceneLayer",
-  "esri/widgets/BasemapToggle",
-  "esri/widgets/Fullscreen"
-], function (Map, SceneView, SceneLayer, BasemapToggle, Fullscreen) {
-
-  // ---- 3D Buildings layer (hidden by default) ----
-  const buildingsLayer = new SceneLayer({
-    portalItem: {
-      id: "ca0470dbbddb4db28bad74ed39949e25"   // OpenStreetMap 3D Buildings
-    },
-    visible: false,
-    title: "3D Buildings"
-  });
+  "esri/widgets/BasemapToggle"
+], function(Map, SceneView, Home, ScaleBar, Fullscreen, SceneLayer, BasemapToggle) {
 
   const map = new Map({
-    basemap: "topo-vector",
-    ground: "world-elevation",
-    layers: [buildingsLayer]
+    basemap: "streets-vector"
   });
+// Creates 3D layer esri recomends portal item instead of URL we can test later
+  const open3DBuildings = new SceneLayer({
+    portalItem: {
+        id: "c444b24b184c4523a5dc96248bfea4e1"
+    },
+    visible: false
+  });
+
+  map.add(open3DBuildings);
 
   const view = new SceneView({
     container: "viewDiv",
     map: map,
-
-    // Center on NYC
-    camera: {
-      position: {
-        longitude: -74.006,
-        latitude: 40.7128,
-        z: 45000
-      },
-      tilt: 0,
-      heading: 0
-    }
+    center: [-74.0060, 40.7128],
+    zoom: 12,
+    tilt: 0 // This is how we changee perspective
   });
 
-  // ---- Track whether we are in 3D mode ----
-  let is3D = false;
-
-  // Store the basemap that was active before entering 3D mode
-  // so we can restore it when returning to 2D
-  let basemapBefore3D = null;
-
-  // ---- Create the 2D/3D toggle button ----
-  const toggleBtn = document.createElement("div");
-  toggleBtn.id = "toggle-3d-btn";
-  toggleBtn.title = "Switch to 3D view";
-  toggleBtn.innerHTML = "3D";
-
-  toggleBtn.addEventListener("click", function () {
-    // Get the center of the current view (the point on the ground you're looking at)
-    const viewCenter = view.center;
-
-    if (!is3D) {
-      // ---- Switch to 3D ----
-      buildingsLayer.visible = true;
-
-      // Remember current basemap and switch to light gray for shadow viewing
-      basemapBefore3D = map.basemap;
-      map.basemap = "gray-vector";
-
-      // Animate camera: keep the same ground target, just tilt
-      view.goTo(
-        {
-          target: viewCenter,
-          tilt: 60
-        },
-        { duration: 1500 }
-      );
-
-      toggleBtn.innerHTML = "2D";
-      toggleBtn.title = "Switch to 2D view";
-      is3D = true;
-
-    } else {
-      // ---- Switch back to 2D ----
-
-      // Animate camera back to top-down, keeping the same ground target
-      view.goTo(
-        {
-          target: viewCenter,
-          tilt: 0,
-          heading: 0
-        },
-        { duration: 1500 }
-      ).then(function () {
-        // Hide buildings and restore previous basemap after animation completes
-        buildingsLayer.visible = false;
-        if (basemapBefore3D) {
-          map.basemap = basemapBefore3D;
-        }
-      });
-
-      toggleBtn.innerHTML = "3D";
-      toggleBtn.title = "Switch to 3D view";
-      is3D = false;
-    }
+const home = new Home({
+    view: view
   });
 
-  // Add the toggle button to the map UI
-  view.ui.add(toggleBtn, "top-left");
+  view.ui.add(home, "top-left")
 
-  // ---- Basemap toggle (topo-vector / satellite) ----
-  const basemapToggle = new BasemapToggle({
+// Issue rendering   
+const scaleBar = new ScaleBar({
     view: view,
-    nextBasemap: "satellite"
+    unit: "dual"
   });
-  view.ui.add(basemapToggle, "bottom-right");
 
-  // ---- Fullscreen button ----
+  view.ui.add(scaleBar, "bottom-left");
+
   const fullscreen = new Fullscreen({
     view: view
   });
-  view.ui.add(fullscreen, "top-left");
+
+  view.ui.add(fullscreen, "top-right");
+
+const basemapToggle = new BasemapToggle({
+  view: view,
+  nextBasemap: "satellite"
+});
+
+view.ui.add(basemapToggle, "bottom-right");
+
+const basemapSelect = document.getElementById("basemapSelect");
+
+  basemapSelect.addEventListener("change", function() {
+    map.basemap = basemapSelect.value;
+  });
+  
+let is3DMode = false;
+
+const toggleButton = document.getElementById("toggle3D");
+
+toggleButton.addEventListener("click", function(){
+    is3DMode = !is3DMode;
+
+    const currentCenter = view.center.clone();
+    const currentScale = view.scale;
+
+    if(is3DMode){
+        open3DBuildings.visible = true;
+        toggleButton.textContent = "Switch to 2D";
+
+        view.goTo({
+            center: currentCenter,
+            scale: currentScale,
+            tilt:60,
+            heading:30
+
+        }, {
+            duration: 1500
+        });
+    } else {
+        open3DBuildings.visible = false;
+        toggleButton.textContent = "Switch to 3D";
+
+        view.goTo({
+            center: currentCenter,
+            scale: currentScale,
+            tilt: 0,
+            heading: 0
+        },{
+            duration: 1500
+        });
+    }
+});
 
 });
