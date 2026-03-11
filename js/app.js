@@ -21,7 +21,12 @@ require([
   // ---- Polygon layers (bottom of draw order) ----
 
   // Heat Vulnerability Index — placeholder
-  // const hviLayer = new FeatureLayer({ url: "...", visible: false, title: "Heat Vulnerability Index" });
+   const hviLayer = new FeatureLayer({ 
+    url: "https://services2.arcgis.com/IsDCghZ73NgoYoz5/arcgis/rest/services/HVIbyCommunityDistrict_ForWeb/FeatureServer/0",
+    visible: false,
+    title: "Heat Vulnerability Index",
+    opacity: 0.7
+ });
 
   // Drinking Fountain walking distance buffer — placeholder (will be a client-side GraphicsLayer)
   // const fountainBufferLayer = new GraphicsLayer({ visible: false, title: "Walking Distance from Fountains" });
@@ -86,7 +91,7 @@ require([
     ground: "world-elevation",
     layers: [
       // --- Polygon layers (bottom of draw order) ---
-      // hviLayer,
+      hviLayer,
       // fountainBufferLayer,
       // treeCanopyLayer,
       // beachesLayer,
@@ -119,8 +124,8 @@ require([
   // Layer registry: connects each checkbox ID to its layer object.
   // When you add a real layer, replace null with the layer variable.
   var layerRegistry = {
-    "hvi":                 null,
-    "hvi-high":            null,   // This will be a filter on hviLayer, not a separate layer
+    "hvi":                 hviLayer,
+    "hvi-high":            hviLayer,   // This will be a filter on hviLayer, not a separate layer
     "fountains":           null,
     "fountain-buffer":     null,
     "cooling-sites":       null,
@@ -182,6 +187,35 @@ require([
       // if (item.id === "hvi-high" && layerRegistry["hvi"]) {
       //   layerRegistry["hvi"].definitionExpression = checkbox.checked ? "HVI >= 4" : null;
       // }
+      // MAIN HVI TOGGLE
+      if (item.id === 'hvi'){
+        if (layer){
+            layer.visible = checkbox.checked;
+
+            if(!checkbox.checked){
+                layer.definitionExpression = null;
+            }
+        }
+        return;
+      }
+
+      // HVI HIGH FILTER (4 and 5)
+      if (item.id === "hvi-high"){
+        var hviLayer = layerRegistry["hvi"];
+        if(checkbox.checked){
+
+            // show only high risk areas
+            hviLayer.definitionExpression = "HVI >= 4";
+        } else {
+            // remove filter
+            hviLayer.definitionExpression = null;
+        }
+        return;
+      }
+      // Normal layer toggle
+      if(layer) {
+        layer.visible = checkbox.checked;
+      }
     });
 
     var labelText = document.createTextNode(" " + item.label);
