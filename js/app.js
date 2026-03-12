@@ -5,8 +5,9 @@ require([
   "esri/widgets/Fullscreen",
   "esri/layers/SceneLayer",
   "esri/layers/FeatureLayer",
-  "esri/widgets/BasemapToggle"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle) {
+  "esri/widgets/BasemapToggle",
+  "esri/layers/GeoJSONLayer"
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -94,7 +95,25 @@ require([
 
 
   // Pools — placeholder
-  // const poolsLayer = new FeatureLayer({ url: "...", visible: false, title: "Pools" });
+ // Pools source data (polygon GeoJSON)
+const poolsLayer = new GeoJSONLayer({
+  url: "assets/pools_points.geojson",
+  visible: false,
+  title: "Pools",
+  renderer:{
+    type: "simple",
+    symbol: {
+        type:"simple-marker",
+        style: "circle",
+        color:[0,150,255,0.9],
+        size:14,
+        outline: {
+            color: [255,255,255,1],
+            width:1.5
+        }
+    }
+  }
+});
 
   // Indoor Cooling Centers — LIVE
   const coolingCentersLayer = new FeatureLayer({
@@ -150,8 +169,8 @@ require([
       // fountainsLayer,
       // coolingSitesLayer,
       sprayShowersLayer,
-      // poolsLayer,
       coolingCentersLayer,
+      poolsLayer,
 
       // 3D buildings (toggled separately via 2D/3D button)
       open3DBuildings
@@ -179,7 +198,7 @@ require([
     "fountain-buffer":     null,
     "cooling-sites":       null,
     "spray-showers":       sprayShowersLayer,
-    "pools":               null,
+    "pools":               poolsLayer,
     "beaches":             null,
     "cooling-centers":     coolingCentersLayer,
     "tree-canopy":         null,
@@ -339,5 +358,7 @@ require([
       );
     }
   });
-
+  
+      
 });
+
