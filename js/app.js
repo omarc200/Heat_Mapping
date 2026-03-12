@@ -5,8 +5,9 @@ require([
   "esri/widgets/Fullscreen",
   "esri/layers/SceneLayer",
   "esri/layers/FeatureLayer",
-  "esri/widgets/BasemapToggle"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle) {
+  "esri/widgets/BasemapToggle",
+  "esri/layers/GeoJSONLayer"
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -65,14 +66,81 @@ require([
   // Cooling Sites — placeholder
   // const coolingSitesLayer = new FeatureLayer({ url: "...", visible: false, title: "Cooling Sites" });
 
-  // Spray Showers — placeholder
-  // const sprayShowersLayer = new FeatureLayer({ url: "...", visible: false, title: "Spray Showers" });
+  // Spray Showers — LIVE
+  const sprayShowersLayer = new FeatureLayer({
+    url: "https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/Cool_Options/FeatureServer/0",
+    visible: false,
+    title: "Spray Showers",
+    definitionExpression: "Space_type = 'Spray Shower'",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#0078A8", 
+        size: "10px",
+        outline: { color: "#ffffff", width: 1 }
+      }
+    },
+    popupTemplate: {
+      title: "💦 Spray Shower",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "Facility_name", label: "Name" }, 
+          { fieldName: "Address", label: "Address" } 
+        ]
+      }]
+    }
+  });
+
 
   // Pools — placeholder
-  // const poolsLayer = new FeatureLayer({ url: "...", visible: false, title: "Pools" });
+ // Pools source data (polygon GeoJSON)
+const poolsLayer = new GeoJSONLayer({
+  url: "assets/pools_points.geojson",
+  visible: false,
+  title: "Pools",
+  renderer:{
+    type: "simple",
+    symbol: {
+        type:"simple-marker",
+        style: "circle",
+        color:[0,150,255,0.9],
+        size:14,
+        outline: {
+            color: [255,255,255,1],
+            width:1.5
+        }
+    }
+  }
+});
 
-  // Indoor Cooling Centers — placeholder
-  // const coolingCentersLayer = new FeatureLayer({ url: "...", visible: false, title: "Indoor Cooling Centers" });
+  // Indoor Cooling Centers — LIVE
+  const coolingCentersLayer = new FeatureLayer({
+    url: "https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/Cool_Options/FeatureServer/0",
+    visible: false,
+    title: "Indoor Cooling Centers",
+    definitionExpression: "Space_type = 'Cooling Center'", 
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#FF8C00", 
+        size: "10px",
+        outline: { color: "#ffffff", width: 1 }
+      }
+    },
+    popupTemplate: {
+      title: "❄️ Cooling Center",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "Facility_name", label: "Name" }, 
+          { fieldName: "Finder_status", label: "Status" } 
+        ]
+      }]
+    }
+  });
 
   // 3D Buildings (only visible in 3D mode, not in layer panel)
   const open3DBuildings = new SceneLayer({
@@ -100,9 +168,9 @@ require([
       // --- Point layers (top of draw order) ---
       // fountainsLayer,
       // coolingSitesLayer,
-      // sprayShowersLayer,
-      // poolsLayer,
-      // coolingCentersLayer,
+      sprayShowersLayer,
+      coolingCentersLayer,
+      poolsLayer,
 
       // 3D buildings (toggled separately via 2D/3D button)
       open3DBuildings
@@ -129,10 +197,10 @@ require([
     "fountains":           null,
     "fountain-buffer":     null,
     "cooling-sites":       null,
-    "spray-showers":       null,
-    "pools":               null,
+    "spray-showers":       sprayShowersLayer,
+    "pools":               poolsLayer,
     "beaches":             null,
-    "cooling-centers":     null,
+    "cooling-centers":     coolingCentersLayer,
     "tree-canopy":         null,
     "building-footprints": buildingFootprintsLayer
   };
@@ -529,5 +597,7 @@ require([
       );
     }
   });
-
+  
+      
 });
+
