@@ -5,8 +5,9 @@ require([
   "esri/widgets/Fullscreen",
   "esri/layers/SceneLayer",
   "esri/layers/FeatureLayer",
-  "esri/widgets/BasemapToggle"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle) {
+  "esri/widgets/BasemapToggle",
+  "esri/layers/GeoJSONLayer"
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -69,7 +70,25 @@ require([
   // const sprayShowersLayer = new FeatureLayer({ url: "...", visible: false, title: "Spray Showers" });
 
   // Pools — placeholder
-  // const poolsLayer = new FeatureLayer({ url: "...", visible: false, title: "Pools" });
+ // Pools source data (polygon GeoJSON)
+const poolsLayer = new GeoJSONLayer({
+  url: "assets/pools_points.geojson",
+  visible: false,
+  title: "Pools",
+  renderer:{
+    type: "simple",
+    symbol: {
+        type:"simple-marker",
+        style: "circle",
+        color:[0,150,255,0.9],
+        size:14,
+        outline: {
+            color: [255,255,255,1],
+            width:1.5
+        }
+    }
+  }
+});
 
   // Indoor Cooling Centers — placeholder
   // const coolingCentersLayer = new FeatureLayer({ url: "...", visible: false, title: "Indoor Cooling Centers" });
@@ -101,7 +120,7 @@ require([
       // fountainsLayer,
       // coolingSitesLayer,
       // sprayShowersLayer,
-      // poolsLayer,
+       poolsLayer,
       // coolingCentersLayer,
 
       // 3D buildings (toggled separately via 2D/3D button)
@@ -130,7 +149,7 @@ require([
     "fountain-buffer":     null,
     "cooling-sites":       null,
     "spray-showers":       null,
-    "pools":               null,
+    "pools":               poolsLayer,
     "beaches":             null,
     "cooling-centers":     null,
     "tree-canopy":         null,
@@ -290,5 +309,7 @@ require([
       );
     }
   });
-
+  
+      
 });
+
