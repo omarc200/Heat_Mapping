@@ -261,6 +261,222 @@ require([
   view.ui.add(basemapToggle, "bottom-right");
 
   // ==========================================================================
+  // SHADOW CAST & DAYLIGHT COMPONENTS
+  // ==========================================================================
+  // Shadow Cast: destroyed and recreated each time the user toggles it,
+  //   because v4.34 provides no reliable way to hide its overlay once rendered.
+  // Daylight: persistent component, reused across activations.
+  //
+  // Both are configured for July 21 — the hottest day of the year on average
+  // in NYC per NOAA 1991–2020 climate normals.
+
+  var tools3DPanel = document.getElementById("tools-3d");
+
+  // Shadow Cast is created/destroyed on demand; Daylight is persistent
+  var shadowCastEl = null;
+  var daylightEl   = null;
+
+  // Track which shadow tool is currently selected
+  var activeShadowTool = "none";
+
+  // Track whether Daylight has been initialized (one-time setup)
+  var daylightInitialized = false;
+
+  // Track whether the custom elements have been registered
+  var componentsRegistered = false;
+
+  // Helper: milliseconds from midnight for a given hour
+  function hoursToMs(hours) {
+    return hours * 60 * 60 * 1000;
+  }
+
+  /**
+   * Wait for custom elements to register, then initialize the persistent
+   * Daylight component. Called once on first 3D activation.
+   */
+  function initShadowTools(callback) {
+    if (daylightInitialized) {
+      if (callback) callback();
+      return;
+    }
+
+    // Wait for custom elements to be registered by the browser
+    Promise.all([
+      customElements.whenDefined("arcgis-shadow-cast"),
+      customElements.whenDefined("arcgis-daylight")
+    ]).then(function () {
+      componentsRegistered = true;
+      console.log("Custom elements registered.");
+
+      // --- Initialize Daylight (persistent, reused across activations) ---
+      daylightEl = document.createElement("arcgis-daylight");
+      daylightEl.id = "daylightComponent";
+      daylightEl.autoDestroyDisabled = true;
+      daylightEl.view = view;
+
+      // Append to DOM temporarily for componentOnReady
+      daylightEl.style.display = "none";
+      document.body.appendChild(daylightEl);
+
+      return daylightEl.componentOnReady();
+
+    }).then(function () {
+      // Configure Daylight defaults
+      daylightEl.localDate = new Date(2025, 6, 21);
+      daylightEl.utcOffset = -4;
+      daylightEl.timeSliderPosition = 8 * 60;
+      daylightEl.playSpeedMultiplier = 1.5;
+      daylightEl.hideTimezone = true;
+
+      // Remove from body until needed
+      document.body.removeChild(daylightEl);
+      daylightEl.style.display = "";
+
+      daylightInitialized = true;
+      console.log("Daylight component initialized.");
+
+      if (callback) callback();
+
+    }).catch(function (err) {
+      console.error("Error initializing shadow tools:", err);
+    });
+  }
+
+  /**
+   * Create a fresh Shadow Cast component, connect it to the view,
+   * configure it, and add it to the map UI.
+   * Returns a promise that resolves when the component is ready.
+   */
+  function createShadowCast() {
+    shadowCastEl = document.createElement("arcgis-shadow-cast");
+    shadowCastEl.id = "shadowCastComponent";
+    // Do NOT set autoDestroyDisabled — we WANT it to auto-destroy
+    // when removed from the DOM, which is how we clear the overlay.
+
+    // Connect to view and add to UI
+    shadowCastEl.view = view;
+    view.ui.add(shadowCastEl, "top-right");
+
+    // Return the componentOnReady promise so we can configure after
+    return shadowCastEl.componentOnReady().then(function () {
+      shadowCastEl.date = new Date(2025, 6, 21);
+      shadowCastEl.startTimeOfDay = hoursToMs(8);
+      shadowCastEl.endTimeOfDay   = hoursToMs(18);
+      shadowCastEl.utcOffset = -4;
+      shadowCastEl.setAttribute("mode", "total-duration");
+
+      view.environment.lighting.directShadowsEnabled = true;
+
+      console.log("Shadow Cast component created and configured.");
+    });
+  }
+
+  /**
+   * Destroy the current Shadow Cast component to fully clear its overlay.
+   */
+  function destroyShadowCast() {
+    if (shadowCastEl) {
+      // Remove from UI — since autoDestroyDisabled is false (default),
+      // removing from DOM triggers the component's destroy() automatically,
+      // which should clean up its internal rendering pipeline.
+      view.ui.remove(shadowCastEl);
+
+      // Also call destroy explicitly to be thorough
+      try {
+        shadowCastEl.destroy();
+      } catch (e) {
+        // May already be destroyed by auto-destroy; that's fine
+      }
+
+      shadowCastEl = null;
+      console.log("Shadow Cast component destroyed.");
+    }
+  }
+
+  /**
+   * Reset the scene's lighting back to a neutral daytime state.
+   */
+  function resetSceneLighting() {
+    view.environment.lighting = {
+      type: "sun",
+      date: new Date("July 21, 2025 12:00:00 EDT"),
+      directShadowsEnabled: false,
+      cameraTrackingEnabled: false
+    };
+  }
+
+  /**
+   * Activate a shadow tool by name ("shadow-cast", "daylight", or "none").
+   */
+  function activateShadowTool(toolName) {
+    activeShadowTool = toolName;
+
+    if (!daylightInitialized || !componentsRegistered) return;
+
+    // --- Cleanup: stop Daylight animation ---
+    daylightEl.dayPlaying = false;
+    daylightEl.yearPlaying = false;
+
+    // --- Cleanup: destroy Shadow Cast to clear its overlay ---
+    destroyShadowCast();
+
+    // --- Cleanup: remove Daylight from UI ---
+    view.ui.remove(daylightEl);
+
+    // --- Cleanup: reset lighting ---
+    resetSceneLighting();
+
+    // --- Activate the selected tool ---
+
+    if (toolName === "shadow-cast") {
+      createShadowCast();
+
+    } else if (toolName === "daylight") {
+      // Set up lighting for Daylight
+      view.environment.lighting = {
+        type: "sun",
+        date: new Date("July 21, 2025 08:00:00 EDT"),
+        directShadowsEnabled: true,
+        cameraTrackingEnabled: false
+      };
+
+      // Add Daylight to the map UI
+      view.ui.add(daylightEl, "top-right");
+
+      // Re-apply settings each time
+      daylightEl.localDate = new Date(2025, 6, 21);
+      daylightEl.utcOffset = -4;
+      daylightEl.timeSliderPosition = 8 * 60;
+      daylightEl.playSpeedMultiplier = 1.5;
+      daylightEl.hideTimezone = true;
+    }
+  }
+
+  /**
+   * Deactivate all shadow tools. Called when switching back to 2D mode.
+   */
+  function deactivateShadowTools() {
+    if (!daylightInitialized) return;
+
+    daylightEl.dayPlaying = false;
+    daylightEl.yearPlaying = false;
+
+    destroyShadowCast();
+    view.ui.remove(daylightEl);
+    resetSceneLighting();
+  }
+
+  // Listen for radio button changes in the 3D tools panel
+  var shadowToolRadios = document.querySelectorAll('input[name="shadow-tool"]');
+  shadowToolRadios.forEach(function (radio) {
+    radio.addEventListener("change", function () {
+      if (is3DMode && radio.checked) {
+        activateShadowTool(radio.value);
+      }
+    });
+  });
+
+  // ==========================================================================
   // 2D / 3D TOGGLE
   // ==========================================================================
 
@@ -273,17 +489,40 @@ require([
     var viewCenter = view.center;
 
     if (is3DMode) {
+      // Switch to 3D mode
       open3DBuildings.visible = true;
       toggleButton.textContent = "Switch to 2D";
 
+      // Show the 3D tools panel in the sidebar
+      tools3DPanel.classList.remove("tools-3d-hidden");
+      tools3DPanel.classList.add("tools-3d-visible");
+
+      // Animate camera to 3D perspective
       view.goTo(
         { target: viewCenter, tilt: 60, heading: 30 },
         { duration: 1500 }
-      );
+      ).then(function () {
+        // Initialize shadow tools on first use, then activate the selected one.
+        // initShadowTools calls componentOnReady() which may take a moment
+        // on the first call; on subsequent calls it returns immediately.
+        initShadowTools(function () {
+          activateShadowTool(activeShadowTool);
+        });
+      });
+
     } else {
+      // Switch to 2D mode
       open3DBuildings.visible = false;
       toggleButton.textContent = "Switch to 3D";
 
+      // Hide the 3D tools panel in the sidebar
+      tools3DPanel.classList.remove("tools-3d-visible");
+      tools3DPanel.classList.add("tools-3d-hidden");
+
+      // Deactivate all shadow tools
+      deactivateShadowTools();
+
+      // Animate camera back to top-down
       view.goTo(
         { target: viewCenter, tilt: 0, heading: 0 },
         { duration: 1500 }
