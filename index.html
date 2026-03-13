@@ -14,7 +14,13 @@
   <link rel="stylesheet" href="css/styles.css" />
 
   <!-- ArcGIS JS SDK Gives us access to classes we will use -->
-<script src="https://js.arcgis.com/4.34/"></script>
+  <script src="https://js.arcgis.com/4.34/"></script>
+
+  <!-- Calcite Design System (required by ArcGIS Map Components) -->
+  <script type="module" src="https://js.arcgis.com/calcite-components/3.3.3/calcite.esm.js"></script>
+
+  <!-- ArcGIS Map Components (for Shadow Cast and Daylight web components) -->
+  <script type="module" src="https://js.arcgis.com/4.34/map-components/"></script>
 </head>
 
 <body>
@@ -33,6 +39,38 @@
     <h3>Map Controls</h3>
 
     <button id="toggle3D">Toggle 2D / 3D</button>
+
+    <!-- 3D Analysis Tools (only visible in 3D mode) -->
+    <div id="tools-3d" class="tools-3d-hidden">
+      <h3>3D Shadow Tools</h3>
+      <p class="tools-3d-description">
+        Choose a shadow analysis mode for the 3D view. Both tools use
+        July 21 — the hottest day of the year on average in NYC.
+      </p>
+      <div class="tool-radio-group">
+        <label class="tool-radio-row">
+          <input type="radio" name="shadow-tool" value="shadow-cast" />
+          <span class="tool-radio-label">
+            <strong>Shadow Analysis</strong><br />
+            <span class="tool-radio-detail">Cumulative shadow duration over the day. Darker areas receive more shade.</span>
+          </span>
+        </label>
+        <label class="tool-radio-row">
+          <input type="radio" name="shadow-tool" value="daylight" />
+          <span class="tool-radio-label">
+            <strong>Daylight Animation</strong><br />
+            <span class="tool-radio-detail">Scrub or animate through the day to see shadows move in real time.</span>
+          </span>
+        </label>
+        <label class="tool-radio-row">
+          <input type="radio" name="shadow-tool" value="none" checked />
+          <span class="tool-radio-label">
+            <strong>None</strong><br />
+            <span class="tool-radio-detail">3D view without shadow tools.</span>
+          </span>
+        </label>
+      </div>
+    </div>
 
   </div>
 

@@ -83,3 +83,74 @@ html, body {
   margin-right: 6px;
   vertical-align: middle;
 }
+
+/* ==========================================================================
+   3D SHADOW TOOLS PANEL (in sidebar)
+   ========================================================================== */
+
+/* Hidden state (when in 2D mode) */
+.tools-3d-hidden {
+  display: none;
+}
+
+/* Visible state (when in 3D mode) */
+.tools-3d-visible {
+  display: block;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.tools-3d-visible h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.tools-3d-description {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+/* Radio button group for tool selection */
+.tool-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-radio-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.tool-radio-row:hover {
+  border-color: #0079c1;
+  background: #f7fbff;
+}
+
+.tool-radio-row input[type="radio"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.tool-radio-label {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.tool-radio-label strong {
+  font-size: 0.9rem;
+}
+
+.tool-radio-detail {
+  color: #666;
+  font-size: 0.8rem;
+}
