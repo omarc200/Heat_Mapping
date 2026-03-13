@@ -79,6 +79,16 @@ html, body {
   font-size: 0.8rem;
 }
 
+/* Disabled state for layers that require zooming in */
+.layer-row-disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.layer-row-disabled:hover {
+  color: inherit;
+}
+
 .layer-checkbox {
   margin-right: 6px;
   vertical-align: middle;

@@ -32,8 +32,25 @@ require([
   // Drinking Fountain walking distance buffer — placeholder (will be a client-side GraphicsLayer)
   // const fountainBufferLayer = new GraphicsLayer({ visible: false, title: "Walking Distance from Fountains" });
 
-  // Tree Canopy Cover — placeholder
-  // const treeCanopyLayer = new FeatureLayer({ url: "...", visible: false, title: "Tree Canopy Cover" });
+  // Tree Canopy Cover — LIVE
+  const treeCanopyLayer = new FeatureLayer({
+    url: "https://services3.arcgis.com/xJHn8F2NTtwCMFtX/ArcGIS/rest/services/TreeCanopy2017_Simplified_1ft/FeatureServer/0",
+    visible: false,
+    title: "Tree Canopy Cover",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-fill",
+        color: [0, 100, 0, 0.75],
+        outline: {
+          color: [0, 80, 0, 0.75],
+          width: 0.5
+        }
+      }
+    },
+    // Only load when zoomed in enough to avoid performance issues at citywide scale
+    minScale: 25000
+  });
 
   // Beaches — placeholder
   // const beachesLayer = new FeatureLayer({ url: "...", visible: false, title: "Beaches" });
@@ -55,7 +72,7 @@ require([
       }
     },
     // Only load when zoomed in enough to avoid performance issues at citywide scale
-    minScale: 50000
+    minScale: 25000
   });
 
   // ---- Point layers (top of draw order) ----
@@ -159,11 +176,12 @@ const poolsLayer = new GeoJSONLayer({
     ground: "world-elevation",
     layers: [
       // --- Polygon layers (bottom of draw order) ---
+      // Draw order bottom-to-top: HVI, Beaches, Building Footprints, Tree Canopy, Fountain Buffer
       hviLayer,
-      // fountainBufferLayer,
-      // treeCanopyLayer,
       // beachesLayer,
       buildingFootprintsLayer,
+      treeCanopyLayer,
+      // fountainBufferLayer,
 
       // --- Point layers (top of draw order) ---
       // fountainsLayer,
@@ -185,6 +203,44 @@ const poolsLayer = new GeoJSONLayer({
     tilt: 0
   });
 
+  // Log the current map scale to the browser console whenever zoom changes.
+  // Open DevTools (F12 → Console) to see these values while testing.
+  // This can be removed once minScale thresholds are finalized.
+  view.watch("scale", function (newScale) {
+    console.log("Current map scale: " + Math.round(newScale));
+
+    // Disable/enable checkboxes for layers that have a minScale threshold.
+    // When the map is zoomed out beyond a layer's minScale, its checkbox
+    // and label are greyed out with a tooltip explaining why.
+    updateScaleDependentControls(newScale);
+  });
+
+  /**
+   * Grey out or re-enable layer panel checkboxes based on the current
+   * map scale and each layer item's minScale property.
+   */
+  function updateScaleDependentControls(currentScale) {
+    layerItems.forEach(function (item) {
+      if (!item.minScale) return; // Only applies to layers with a minScale
+
+      var checkbox = document.querySelector('.layer-checkbox[data-layer-id="' + item.id + '"]');
+      if (!checkbox) return;
+
+      var row = checkbox.closest(".layer-row");
+      var beyondScale = currentScale > item.minScale;
+
+      checkbox.disabled = beyondScale;
+
+      if (beyondScale) {
+        row.classList.add("layer-row-disabled");
+        row.title = "Zoom in to enable this layer";
+      } else {
+        row.classList.remove("layer-row-disabled");
+        row.title = "";
+      }
+    });
+  }
+
   // ==========================================================================
   // LAYER CONTROL PANEL (collapsible, inside map UI)
   // ==========================================================================
@@ -201,7 +257,7 @@ const poolsLayer = new GeoJSONLayer({
     "pools":               poolsLayer,
     "beaches":             null,
     "cooling-centers":     coolingCentersLayer,
-    "tree-canopy":         null,
+    "tree-canopy":         treeCanopyLayer,
     "building-footprints": buildingFootprintsLayer
   };
 
@@ -216,8 +272,8 @@ const poolsLayer = new GeoJSONLayer({
     { id: "pools",              label: "Pools",                             indent: false },
     { id: "beaches",            label: "Beaches",                           indent: false },
     { id: "cooling-centers",    label: "Indoor Cooling Centers",            indent: false },
-    { id: "tree-canopy",        label: "Tree Canopy Cover",                 indent: false },
-    { id: "building-footprints", label: "Building Footprints",              indent: false }
+    { id: "tree-canopy",        label: "Tree Canopy Cover",                 indent: false, minScale: 25000 },
+    { id: "building-footprints", label: "Building Footprints",              indent: false, minScale: 25000 }
   ];
 
   // Build the panel container
