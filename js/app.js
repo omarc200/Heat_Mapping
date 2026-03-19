@@ -6,8 +6,11 @@ require([
   "esri/layers/SceneLayer",
   "esri/layers/FeatureLayer",
   "esri/widgets/BasemapToggle",
-  "esri/layers/GeoJSONLayer"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer) {
+  "esri/layers/GeoJSONLayer",
+  "esri/layers/GraphicsLayer",
+  "esri/Graphic",
+  "esri/geometry/geometryEngineAsync"
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, GraphicsLayer, Graphic, geometryEngineAsync) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -52,8 +55,22 @@ require([
     minScale: 25000
   });
 
-  // Beaches — placeholder
-  // const beachesLayer = new FeatureLayer({ url: "...", visible: false, title: "Beaches" });
+  // Beaches — local GeoJSON point data
+  const beachesLayer = new GeoJSONLayer({
+    url: "assets/beaches_points.geojson",
+    visible: false,
+    title: "Beaches",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        style: "circle",
+        color: [0, 150, 255, 0.9],
+        size: 14,
+        outline: { color: [255, 255, 255, 1], width: 1.5 }
+      }
+    }
+  });
 
   // Building Footprints — LIVE
   const buildingFootprintsLayer = new FeatureLayer({
@@ -77,11 +94,76 @@ require([
 
   // ---- Point layers (top of draw order) ----
 
-  // Drinking Fountains — placeholder
-  // const fountainsLayer = new FeatureLayer({ url: "...", visible: false, title: "Drinking Fountains" });
+  // Drinking Fountains — LIVE
+  const fountainsLayer = new FeatureLayer({
+    url: "https://services3.arcgis.com/QnAlpI4OtHhbgGN9/arcgis/rest/services/NYC_Parks_Drinking_Fountains_20240129/FeatureServer/0",
+    visible: false,
+    title: "Drinking Fountains",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#1E90FF",
+        size: "9px",
+        outline: { color: "#ffffff", width: 1.5 }
+      }
+    },
+    popupTemplate: {
+      title: "Drinking Fountain",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "propertyna", label: "Park / Property" },
+          { fieldName: "borough",    label: "Borough" },
+          { fieldName: "fountainty", label: "Fountain Type" },
+          { fieldName: "featuresta", label: "Status" }
+        ]
+      }]
+    }
+  });
 
-  // Cooling Sites — placeholder
-  // const coolingSitesLayer = new FeatureLayer({ url: "...", visible: false, title: "Cooling Sites" });
+  // Drinking Fountain ¼-mile dissolved buffer — LIVE (client-side, populated after view loads)
+  const fountainBufferLayer = new GraphicsLayer({
+    visible: false,
+    title: "Walking Distance from Fountains"
+  });
+
+  // Cooling Sites (Cool It!) — LIVE
+  const coolingSitesLayer = new FeatureLayer({
+    url: "https://services2.arcgis.com/ZpsvDOsGv97WuKRh/arcgis/rest/services/Cool_it_Cooling_Sites/FeatureServer/0",
+    visible: false,
+    title: "Cooling Sites",
+    renderer: {
+      type: "unique-value",
+      field: "featuretype",
+      uniqueValueInfos: [
+        {
+          value: "Misting Station",
+          label: "Misting Station",
+          symbol: { type: "simple-marker", color: "#00CED1", size: "10px", outline: { color: "#fff", width: 1 } }
+        },
+        {
+          value: "Hydrant Spray Cap",
+          label: "Hydrant Spray Cap",
+          symbol: { type: "simple-marker", color: "#20B2AA", size: "10px", outline: { color: "#fff", width: 1 } }
+        }
+      ],
+      defaultSymbol: { type: "simple-marker", color: "#5F9EA0", size: "9px", outline: { color: "#fff", width: 1 } },
+      defaultLabel: "Spray Adapter / Other"
+    },
+    popupTemplate: {
+      title: "Cooling Site",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "featuretype",   label: "Type" },
+          { fieldName: "propertyname",  label: "Property" },
+          { fieldName: "borough",       label: "Borough" },
+          { fieldName: "status",        label: "Status" }
+        ]
+      }]
+    }
+  });
 
   // Spray Showers — LIVE
   const sprayShowersLayer = new FeatureLayer({
@@ -178,14 +260,14 @@ const poolsLayer = new GeoJSONLayer({
       // --- Polygon layers (bottom of draw order) ---
       // Draw order bottom-to-top: HVI, Beaches, Building Footprints, Tree Canopy, Fountain Buffer
       hviLayer,
-      // beachesLayer,
+      beachesLayer,
       buildingFootprintsLayer,
       treeCanopyLayer,
-      // fountainBufferLayer,
+      fountainBufferLayer,
 
       // --- Point layers (top of draw order) ---
-      // fountainsLayer,
-      // coolingSitesLayer,
+      fountainsLayer,
+      coolingSitesLayer,
       sprayShowersLayer,
       coolingCentersLayer,
       poolsLayer,
@@ -250,12 +332,12 @@ const poolsLayer = new GeoJSONLayer({
   var layerRegistry = {
     "hvi":                 hviLayer,
     "hvi-high":            hviLayer,   // This will be a filter on hviLayer, not a separate layer
-    "fountains":           null,
-    "fountain-buffer":     null,
-    "cooling-sites":       null,
+    "fountains":           fountainsLayer,
+    "fountain-buffer":     fountainBufferLayer,
+    "cooling-sites":       coolingSitesLayer,
     "spray-showers":       sprayShowersLayer,
     "pools":               poolsLayer,
-    "beaches":             null,
+    "beaches":             beachesLayer,
     "cooling-centers":     coolingCentersLayer,
     "tree-canopy":         treeCanopyLayer,
     "building-footprints": buildingFootprintsLayer
@@ -383,6 +465,37 @@ const poolsLayer = new GeoJSONLayer({
     nextBasemap: "satellite"
   });
   view.ui.add(basemapToggle, "bottom-right");
+
+  // ==========================================================================
+  // DRINKING FOUNTAIN BUFFER GENERATION
+  // ==========================================================================
+  // Once the view is ready, query all fountain points and generate a single
+  // dissolved ¼-mile (402m) geodesic buffer around them.
+
+  view.when(function () {
+    fountainsLayer.queryFeatures({
+      where: "1=1",
+      returnGeometry: true,
+      outFields: ["ObjectId"]
+    }).then(function (result) {
+      var geometries = result.features.map(function (f) { return f.geometry; });
+      if (!geometries.length) return;
+      return geometryEngineAsync.geodesicBuffer(geometries, 402, "meters", true);
+    }).then(function (buffered) {
+      if (!buffered) return;
+      var geom = Array.isArray(buffered) ? buffered[0] : buffered;
+      fountainBufferLayer.add(new Graphic({
+        geometry: geom,
+        symbol: {
+          type: "simple-fill",
+          color: [30, 144, 255, 0.15],
+          outline: { color: [30, 100, 220, 0.5], width: 1 }
+        }
+      }));
+    }).catch(function (err) {
+      console.error("Fountain buffer generation failed:", err);
+    });
+  });
 
   // ==========================================================================
   // SHADOW CAST & DAYLIGHT COMPONENTS
