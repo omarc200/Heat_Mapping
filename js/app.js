@@ -336,7 +336,7 @@ const poolsLayer = new GeoJSONLayer({
   // When you add a real layer, replace null with the layer variable.
   var layerRegistry = {
     "hvi":                 hviLayer,
-    "hvi-high":            hviLayer,   // This will be a filter on hviLayer, not a separate layer
+    "hvi-high":            null,   // This will be a filter on hviLayer, not a separate layer
     "fountains":           fountainsLayer,
     "fountain-buffer":     fountainBufferLayer,
     "cooling-sites":       coolingSitesLayer,
@@ -378,6 +378,33 @@ const poolsLayer = new GeoJSONLayer({
   var panelContent = document.createElement("div");
   panelContent.id = "layer-panel-content";
 
+function updateHviState() {
+  var hviCheckbox = document.querySelector('.layer-checkbox[data-layer-id="hvi"]');
+  var hviHighCheckbox = document.querySelector('.layer-checkbox[data-layer-id="hvi-high"]');
+
+  if (!hviCheckbox || !hviHighCheckbox) return;
+
+  var showHvi = hviCheckbox.checked;
+  var showHigh = hviHighCheckbox.checked;
+
+  // neither checked -> hide HVI
+  if (!showHvi && !showHigh) {
+    hviLayer.visible = false;
+    hviLayer.definitionExpression = null;
+    return;
+  }
+
+  // high-risk checked -> show only HVI 4 or 5
+  if (showHigh) {
+    hviLayer.visible = true;
+    hviLayer.definitionExpression = "HVI >= 4";
+    return;
+  }
+
+  // only main HVI checked -> show full HVI
+  hviLayer.visible = true;
+  hviLayer.definitionExpression = null;
+}
   // Build a checkbox row for each layer
   layerItems.forEach(function (item) {
     var row = document.createElement("label");
@@ -389,45 +416,18 @@ const poolsLayer = new GeoJSONLayer({
     checkbox.dataset.layerId = item.id;
 
     checkbox.addEventListener("change", function () {
-      var layer = layerRegistry[item.id];
-      if (layer) {
-        layer.visible = checkbox.checked;
-      }
-      // Special case: "hvi-high" will apply/remove a definition expression
-      // on hviLayer rather than toggling a separate layer. Example:
-      // if (item.id === "hvi-high" && layerRegistry["hvi"]) {
-      //   layerRegistry["hvi"].definitionExpression = checkbox.checked ? "HVI >= 4" : null;
-      // }
-      // MAIN HVI TOGGLE
-      if (item.id === 'hvi'){
-        if (layer){
-            layer.visible = checkbox.checked;
+  // Handle HVI controls together
+  if (item.id === "hvi" || item.id === "hvi-high") {
+    updateHviState();
+    return;
+  }
 
-            if(!checkbox.checked){
-                layer.definitionExpression = null;
-            }
-        }
-        return;
-      }
-
-      // HVI HIGH FILTER (4 and 5)
-      if (item.id === "hvi-high"){
-        var hviLayer = layerRegistry["hvi"];
-        if(checkbox.checked){
-
-            // show only high risk areas
-            hviLayer.definitionExpression = "HVI >= 4";
-        } else {
-            // remove filter
-            hviLayer.definitionExpression = null;
-        }
-        return;
-      }
-      // Normal layer toggle
-      if(layer) {
-        layer.visible = checkbox.checked;
-      }
-    });
+  // Normal layer toggle
+  var layer = layerRegistry[item.id];
+  if (layer) {
+    layer.visible = checkbox.checked;
+  }
+});
 
     var labelText = document.createTextNode(" " + item.label);
 
@@ -436,6 +436,8 @@ const poolsLayer = new GeoJSONLayer({
     panelContent.appendChild(row);
   });
 
+  updateHviState(); // Initialize HVI state based on checkboxes (both start unchecked, so HVI starts hidden)
+  
   // Wire up the toggle button to expand/collapse
   var panelOpen = false;
   panelToggleBtn.addEventListener("click", function () {
