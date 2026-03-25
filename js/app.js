@@ -188,8 +188,7 @@ require([
       content: [{
         type: "fields",
         fieldInfos: [
-          { fieldName: "Facility_name", label: "Name" }, 
-          { fieldName: "Address", label: "Address" } 
+          { fieldName: "Facility_name", label: "Name" }
         ]
       }]
     }
@@ -238,7 +237,6 @@ const poolsLayer = new GeoJSONLayer({
         type: "fields",
         fieldInfos: [
           { fieldName: "Facility_name", label: "Name" }, 
-          { fieldName: "Finder_status", label: "Status" } 
         ]
       }]
     }
