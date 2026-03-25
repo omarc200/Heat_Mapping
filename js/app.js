@@ -9,8 +9,10 @@ require([
   "esri/layers/GeoJSONLayer",
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
-  "esri/geometry/geometryEngineAsync"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, GraphicsLayer, Graphic, geometryEngineAsync) {
+  "esri/geometry/geometryEngineAsync",
+  "esri/widgets/Legend",
+  "esri/widgets/Expand"
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -125,7 +127,8 @@ require([
   // Drinking Fountain ¼-mile dissolved buffer — LIVE (client-side, populated after view loads)
   const fountainBufferLayer = new GraphicsLayer({
     visible: false,
-    title: "Walking Distance from Fountains"
+    title: "Walking Distance from Fountains",
+    legendEnabled: false  // GraphicsLayer not supported by Legend widget; custom swatch used instead
   });
 
   // Cooling Sites (Cool It!) — LIVE
@@ -246,7 +249,8 @@ const poolsLayer = new GeoJSONLayer({
     portalItem: {
       id: "c444b24b184c4523a5dc96248bfea4e1"
     },
-    visible: false
+    visible: false,
+    legendEnabled: false
   });
 
   // ==========================================================================
@@ -295,6 +299,9 @@ const poolsLayer = new GeoJSONLayer({
     // When the map is zoomed out beyond a layer's minScale, its checkbox
     // and label are greyed out with a tooltip explaining why.
     updateScaleDependentControls(newScale);
+
+    // Also update the legend to hide entries for layers beyond their minScale
+    updateLegendVisibility();
   });
 
   /**
@@ -465,6 +472,115 @@ const poolsLayer = new GeoJSONLayer({
     nextBasemap: "satellite"
   });
   view.ui.add(basemapToggle, "bottom-right");
+
+  // ==========================================================================
+  // LEGEND (collapsible, bottom-left, auto-hides when no 2D layers visible)
+  // ==========================================================================
+  //
+  // The Legend widget ignores layerInfos order and instead renders layers
+  // based on their position in the map.layers collection (topmost first).
+  // To control legend order independently of draw order, we create one
+  // Legend widget per layer and assemble them in a container in the
+  // desired sequence.  Each per-layer Legend auto-shows/hides based on
+  // layer visibility, so the container only displays active layers.
+
+  // Desired legend order (matches layer control panel).
+  // fountainBufferLayer (GraphicsLayer) is excluded because the Legend
+  // widget does not support GraphicsLayer.
+  var legendLayers = [
+    hviLayer,
+    fountainsLayer,
+    coolingSitesLayer,
+    sprayShowersLayer,
+    poolsLayer,
+    beachesLayer,
+    coolingCentersLayer,
+    treeCanopyLayer,
+    buildingFootprintsLayer
+  ];
+
+  // Build a container div and create one Legend per layer in order.
+  // Each child div is hidden when its layer is not visible to prevent
+  // the "No legend" placeholder from appearing for inactive layers.
+  var legendContainer = document.createElement("div");
+  legendContainer.id = "legend-container";
+
+  var legendChildDivs = [];  // parallel array: legendChildDivs[i] wraps legendLayers[i]
+
+  legendLayers.forEach(function (lyr, i) {
+    var childDiv = document.createElement("div");
+    childDiv.style.display = lyr.visible ? "block" : "none";
+    legendContainer.appendChild(childDiv);
+    legendChildDivs.push(childDiv);
+
+    new Legend({
+      view: view,
+      container: childDiv,
+      layerInfos: [{ layer: lyr }],
+      style: "classic"
+    });
+  });
+
+  // -- Wrap in Expand for collapsibility --
+  var legendExpand = new Expand({
+    view: view,
+    content: legendContainer,
+    expandIcon: "legend",
+    expandTooltip: "Legend",
+    collapseTooltip: "Collapse legend",
+    expanded: true
+  });
+
+  // Start hidden — will show when at least one 2D layer becomes visible
+  legendExpand.visible = false;
+  view.ui.add(legendExpand, "bottom-left");
+
+  /**
+   * Check whether any 2D data layer is currently visible and update
+   * the legend Expand widget visibility accordingly.
+   * Also shows/hides each per-layer Legend child div to prevent
+   * "No legend" placeholders for inactive layers or layers beyond
+   * their minScale threshold.
+   */
+  function updateLegendVisibility() {
+    var currentScale = view.scale;
+
+    // Toggle each per-layer child div.
+    // A layer's legend entry is shown only if the layer is visible AND
+    // (if it has a minScale) the current map scale is within range.
+    legendLayers.forEach(function (lyr, i) {
+      var isVisible = lyr.visible;
+      if (isVisible && lyr.minScale && currentScale > lyr.minScale) {
+        isVisible = false;
+      }
+      legendChildDivs[i].style.display = isVisible ? "block" : "none";
+    });
+
+    // In 3D mode, always hide the entire legend
+    if (is3DMode) {
+      legendExpand.visible = false;
+      return;
+    }
+
+    // Show legend Expand if any 2D data layer is effectively visible
+    var anyVisible = legendLayers.some(function (lyr) {
+      if (!lyr.visible) return false;
+      if (lyr.minScale && currentScale > lyr.minScale) return false;
+      return true;
+    });
+
+    legendExpand.visible = anyVisible;
+  }
+
+  // Watch visibility changes on every 2D data layer
+  legendLayers.forEach(function (lyr) {
+    lyr.watch("visible", function () {
+      updateLegendVisibility();
+    });
+  });
+
+  // Run once at startup (all layers start hidden, so legend starts hidden)
+  updateLegendVisibility();
 
   // ==========================================================================
   // DRINKING FOUNTAIN BUFFER GENERATION
@@ -730,6 +846,9 @@ const poolsLayer = new GeoJSONLayer({
       open3DBuildings.visible = true;
       toggleButton.textContent = "Switch to 2D";
 
+      // Hide the legend in 3D mode
+      updateLegendVisibility();
+
       // Show the 3D tools panel in the sidebar
       tools3DPanel.classList.remove("tools-3d-hidden");
       tools3DPanel.classList.add("tools-3d-visible");
@@ -751,6 +870,9 @@ const poolsLayer = new GeoJSONLayer({
       // Switch to 2D mode
       open3DBuildings.visible = false;
       toggleButton.textContent = "Switch to 3D";
+
+      // Re-show the legend if any 2D layers are still active
+      updateLegendVisibility();
 
       // Hide the 3D tools panel in the sidebar
       tools3DPanel.classList.remove("tools-3d-visible");

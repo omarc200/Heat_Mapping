@@ -164,3 +164,20 @@ html, body {
   color: #666;
   font-size: 0.8rem;
 }
+
+/* ==========================================================================
+   LEGEND (bottom-left, inside Expand widget)
+   ========================================================================== */
+
+/* Container for per-layer Legend widget instances.
+   max-height prevents the legend from extending beyond the map edge;
+   overflow-y enables scrolling when many layers are active.
+   No double-scrollbar risk here because the per-layer Legend widgets
+   do not have their own scroll containers. */
+#legend-container {
+  background: #ffffff;
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 200px;
+}
