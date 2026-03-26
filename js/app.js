@@ -8,8 +8,13 @@ require([
   "esri/widgets/BasemapToggle",
   "esri/layers/GeoJSONLayer",
   "esri/widgets/Search",
-  "esri/widgets/Search/LocatorSearchSource"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, Search, LocatorSearchSource) {
+  "esri/widgets/Search/LocatorSearchSource",
+  "esri/layers/GraphicsLayer",
+  "esri/Graphic",
+  "esri/geometry/geometryEngineAsync",
+  "esri/widgets/Legend",
+  "esri/widgets/Expand"
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, Search, LocatorSearchSource, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -54,8 +59,22 @@ require([
     minScale: 25000
   });
 
-  // Beaches — placeholder
-  // const beachesLayer = new FeatureLayer({ url: "...", visible: false, title: "Beaches" });
+  // Beaches — local GeoJSON point data
+  const beachesLayer = new GeoJSONLayer({
+    url: "assets/beaches_points.geojson",
+    visible: false,
+    title: "Beaches",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        style: "circle",
+        color: [0, 150, 255, 0.9],
+        size: 14,
+        outline: { color: [255, 255, 255, 1], width: 1.5 }
+      }
+    }
+  });
 
   // Building Footprints — LIVE
   const buildingFootprintsLayer = new FeatureLayer({
@@ -79,11 +98,77 @@ require([
 
   // ---- Point layers (top of draw order) ----
 
-  // Drinking Fountains — placeholder
-  // const fountainsLayer = new FeatureLayer({ url: "...", visible: false, title: "Drinking Fountains" });
+  // Drinking Fountains — LIVE
+  const fountainsLayer = new FeatureLayer({
+    url: "https://services3.arcgis.com/QnAlpI4OtHhbgGN9/arcgis/rest/services/NYC_Parks_Drinking_Fountains_20240129/FeatureServer/0",
+    visible: false,
+    title: "Drinking Fountains",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#1E90FF",
+        size: "9px",
+        outline: { color: "#ffffff", width: 1.5 }
+      }
+    },
+    popupTemplate: {
+      title: "Drinking Fountain",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "propertyna", label: "Park / Property" },
+          { fieldName: "borough",    label: "Borough" },
+          { fieldName: "fountainty", label: "Fountain Type" },
+          { fieldName: "featuresta", label: "Status" }
+        ]
+      }]
+    }
+  });
 
-  // Cooling Sites — placeholder
-  // const coolingSitesLayer = new FeatureLayer({ url: "...", visible: false, title: "Cooling Sites" });
+  // Drinking Fountain ¼-mile dissolved buffer — LIVE (client-side, populated after view loads)
+  const fountainBufferLayer = new GraphicsLayer({
+    visible: false,
+    title: "Walking Distance from Fountains",
+    legendEnabled: false  // GraphicsLayer not supported by Legend widget; custom swatch used instead
+  });
+
+  // Cooling Sites (Cool It!) — LIVE
+  const coolingSitesLayer = new FeatureLayer({
+    url: "https://services2.arcgis.com/ZpsvDOsGv97WuKRh/arcgis/rest/services/Cool_it_Cooling_Sites/FeatureServer/0",
+    visible: false,
+    title: "Cooling Sites",
+    renderer: {
+      type: "unique-value",
+      field: "featuretype",
+      uniqueValueInfos: [
+        {
+          value: "Misting Station",
+          label: "Misting Station",
+          symbol: { type: "simple-marker", color: "#00CED1", size: "10px", outline: { color: "#fff", width: 1 } }
+        },
+        {
+          value: "Hydrant Spray Cap",
+          label: "Hydrant Spray Cap",
+          symbol: { type: "simple-marker", color: "#20B2AA", size: "10px", outline: { color: "#fff", width: 1 } }
+        }
+      ],
+      defaultSymbol: { type: "simple-marker", color: "#5F9EA0", size: "9px", outline: { color: "#fff", width: 1 } },
+      defaultLabel: "Spray Adapter / Other"
+    },
+    popupTemplate: {
+      title: "Cooling Site",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "featuretype",   label: "Type" },
+          { fieldName: "propertyname",  label: "Property" },
+          { fieldName: "borough",       label: "Borough" },
+          { fieldName: "status",        label: "Status" }
+        ]
+      }]
+    }
+  });
 
   // Spray Showers — LIVE
   const sprayShowersLayer = new FeatureLayer({
@@ -105,8 +190,7 @@ require([
       content: [{
         type: "fields",
         fieldInfos: [
-          { fieldName: "Facility_name", label: "Name" }, 
-          { fieldName: "Address", label: "Address" } 
+          { fieldName: "Facility_name", label: "Name" }
         ]
       }]
     }
@@ -155,7 +239,6 @@ const poolsLayer = new GeoJSONLayer({
         type: "fields",
         fieldInfos: [
           { fieldName: "Facility_name", label: "Name" }, 
-          { fieldName: "Finder_status", label: "Status" } 
         ]
       }]
     }
@@ -166,7 +249,8 @@ const poolsLayer = new GeoJSONLayer({
     portalItem: {
       id: "c444b24b184c4523a5dc96248bfea4e1"
     },
-    visible: false
+    visible: false,
+    legendEnabled: false
   });
 
   // ==========================================================================
@@ -180,14 +264,14 @@ const poolsLayer = new GeoJSONLayer({
       // --- Polygon layers (bottom of draw order) ---
       // Draw order bottom-to-top: HVI, Beaches, Building Footprints, Tree Canopy, Fountain Buffer
       hviLayer,
-      // beachesLayer,
+      beachesLayer,
       buildingFootprintsLayer,
       treeCanopyLayer,
-      // fountainBufferLayer,
+      fountainBufferLayer,
 
       // --- Point layers (top of draw order) ---
-      // fountainsLayer,
-      // coolingSitesLayer,
+      fountainsLayer,
+      coolingSitesLayer,
       sprayShowersLayer,
       coolingCentersLayer,
       poolsLayer,
@@ -215,6 +299,9 @@ const poolsLayer = new GeoJSONLayer({
     // When the map is zoomed out beyond a layer's minScale, its checkbox
     // and label are greyed out with a tooltip explaining why.
     updateScaleDependentControls(newScale);
+
+    // Also update the legend to hide entries for layers beyond their minScale
+    updateLegendVisibility();
   });
 
   /**
@@ -252,12 +339,12 @@ const poolsLayer = new GeoJSONLayer({
   var layerRegistry = {
     "hvi":                 hviLayer,
     "hvi-high":            hviLayer,   // This will be a filter on hviLayer, not a separate layer
-    "fountains":           null,
-    "fountain-buffer":     null,
-    "cooling-sites":       null,
+    "fountains":           fountainsLayer,
+    "fountain-buffer":     fountainBufferLayer,
+    "cooling-sites":       coolingSitesLayer,
     "spray-showers":       sprayShowersLayer,
     "pools":               poolsLayer,
-    "beaches":             null,
+    "beaches":             beachesLayer,
     "cooling-centers":     coolingCentersLayer,
     "tree-canopy":         treeCanopyLayer,
     "building-footprints": buildingFootprintsLayer
@@ -413,6 +500,146 @@ const poolsLayer = new GeoJSONLayer({
   });
 
   view.ui.add(search, "top-right");
+
+  // ==========================================================================
+  // LEGEND (collapsible, bottom-left, auto-hides when no 2D layers visible)
+  // ==========================================================================
+  //
+  // The Legend widget ignores layerInfos order and instead renders layers
+  // based on their position in the map.layers collection (topmost first).
+  // To control legend order independently of draw order, we create one
+  // Legend widget per layer and assemble them in a container in the
+  // desired sequence.  Each per-layer Legend auto-shows/hides based on
+  // layer visibility, so the container only displays active layers.
+
+  // Desired legend order (matches layer control panel).
+  // fountainBufferLayer (GraphicsLayer) is excluded because the Legend
+  // widget does not support GraphicsLayer.
+  var legendLayers = [
+    hviLayer,
+    fountainsLayer,
+    coolingSitesLayer,
+    sprayShowersLayer,
+    poolsLayer,
+    beachesLayer,
+    coolingCentersLayer,
+    treeCanopyLayer,
+    buildingFootprintsLayer
+  ];
+
+  // Build a container div and create one Legend per layer in order.
+  // Each child div is hidden when its layer is not visible to prevent
+  // the "No legend" placeholder from appearing for inactive layers.
+  var legendContainer = document.createElement("div");
+  legendContainer.id = "legend-container";
+
+  var legendChildDivs = [];  // parallel array: legendChildDivs[i] wraps legendLayers[i]
+
+  legendLayers.forEach(function (lyr, i) {
+    var childDiv = document.createElement("div");
+    childDiv.style.display = lyr.visible ? "block" : "none";
+    legendContainer.appendChild(childDiv);
+    legendChildDivs.push(childDiv);
+
+    new Legend({
+      view: view,
+      container: childDiv,
+      layerInfos: [{ layer: lyr }],
+      style: "classic"
+    });
+  });
+
+  // -- Wrap in Expand for collapsibility --
+  var legendExpand = new Expand({
+    view: view,
+    content: legendContainer,
+    expandIcon: "legend",
+    expandTooltip: "Legend",
+    collapseTooltip: "Collapse legend",
+    expanded: true
+  });
+
+  // Start hidden — will show when at least one 2D layer becomes visible
+  legendExpand.visible = false;
+  view.ui.add(legendExpand, "bottom-left");
+
+  /**
+   * Check whether any 2D data layer is currently visible and update
+   * the legend Expand widget visibility accordingly.
+   * Also shows/hides each per-layer Legend child div to prevent
+   * "No legend" placeholders for inactive layers or layers beyond
+   * their minScale threshold.
+   */
+  function updateLegendVisibility() {
+    var currentScale = view.scale;
+
+    // Toggle each per-layer child div.
+    // A layer's legend entry is shown only if the layer is visible AND
+    // (if it has a minScale) the current map scale is within range.
+    legendLayers.forEach(function (lyr, i) {
+      var isVisible = lyr.visible;
+      if (isVisible && lyr.minScale && currentScale > lyr.minScale) {
+        isVisible = false;
+      }
+      legendChildDivs[i].style.display = isVisible ? "block" : "none";
+    });
+
+    // In 3D mode, always hide the entire legend
+    if (is3DMode) {
+      legendExpand.visible = false;
+      return;
+    }
+
+    // Show legend Expand if any 2D data layer is effectively visible
+    var anyVisible = legendLayers.some(function (lyr) {
+      if (!lyr.visible) return false;
+      if (lyr.minScale && currentScale > lyr.minScale) return false;
+      return true;
+    });
+
+    legendExpand.visible = anyVisible;
+  }
+
+  // Watch visibility changes on every 2D data layer
+  legendLayers.forEach(function (lyr) {
+    lyr.watch("visible", function () {
+      updateLegendVisibility();
+    });
+  });
+
+  // Run once at startup (all layers start hidden, so legend starts hidden)
+  updateLegendVisibility();
+
+  // ==========================================================================
+  // DRINKING FOUNTAIN BUFFER GENERATION
+  // ==========================================================================
+  // Once the view is ready, query all fountain points and generate a single
+  // dissolved ¼-mile (402m) geodesic buffer around them.
+
+  view.when(function () {
+    fountainsLayer.queryFeatures({
+      where: "1=1",
+      returnGeometry: true,
+      outFields: ["ObjectId"]
+    }).then(function (result) {
+      var geometries = result.features.map(function (f) { return f.geometry; });
+      if (!geometries.length) return;
+      return geometryEngineAsync.geodesicBuffer(geometries, 402, "meters", true);
+    }).then(function (buffered) {
+      if (!buffered) return;
+      var geom = Array.isArray(buffered) ? buffered[0] : buffered;
+      fountainBufferLayer.add(new Graphic({
+        geometry: geom,
+        symbol: {
+          type: "simple-fill",
+          color: [30, 144, 255, 0.15],
+          outline: { color: [30, 100, 220, 0.5], width: 1 }
+        }
+      }));
+    }).catch(function (err) {
+      console.error("Fountain buffer generation failed:", err);
+    });
+  });
 
   // ==========================================================================
   // SHADOW CAST & DAYLIGHT COMPONENTS
@@ -647,6 +874,9 @@ const poolsLayer = new GeoJSONLayer({
       open3DBuildings.visible = true;
       toggleButton.textContent = "Switch to 2D";
 
+      // Hide the legend in 3D mode
+      updateLegendVisibility();
+
       // Show the 3D tools panel in the sidebar
       tools3DPanel.classList.remove("tools-3d-hidden");
       tools3DPanel.classList.add("tools-3d-visible");
@@ -668,6 +898,9 @@ const poolsLayer = new GeoJSONLayer({
       // Switch to 2D mode
       open3DBuildings.visible = false;
       toggleButton.textContent = "Switch to 3D";
+
+      // Re-show the legend if any 2D layers are still active
+      updateLegendVisibility();
 
       // Hide the 3D tools panel in the sidebar
       tools3DPanel.classList.remove("tools-3d-visible");

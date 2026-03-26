@@ -1,0 +1,60 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-73.9857, 40.5741] },
+      "properties": { "name": "Coney Island Beach", "borough": "Brooklyn" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-73.9609, 40.5771] },
+      "properties": { "name": "Brighton Beach", "borough": "Brooklyn" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-73.9402, 40.5802] },
+      "properties": { "name": "Manhattan Beach", "borough": "Brooklyn" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-73.8198, 40.5842] },
+      "properties": { "name": "Rockaway Beach", "borough": "Queens" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-73.8649, 40.5620] },
+      "properties": { "name": "Jacob Riis Park Beach", "borough": "Queens" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-73.7964, 40.8651] },
+      "properties": { "name": "Orchard Beach", "borough": "Bronx" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-74.0666, 40.5993] },
+      "properties": { "name": "South Beach", "borough": "Staten Island" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-74.0840, 40.5795] },
+      "properties": { "name": "Midland Beach", "borough": "Staten Island" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-74.1026, 40.5426] },
+      "properties": { "name": "Cedar Grove Beach", "borough": "Staten Island" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-74.1499, 40.5283] },
+      "properties": { "name": "Great Kills Beach", "borough": "Staten Island" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-74.1977, 40.5165] },
+      "properties": { "name": "Wolfe's Pond Beach", "borough": "Staten Island" }
+    }
+  ]
+}
