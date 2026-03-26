@@ -59,20 +59,29 @@ require([
     minScale: 25000
   });
 
-  // Beaches — local GeoJSON point data
-  const beachesLayer = new GeoJSONLayer({
-    url: "assets/beaches_points.geojson",
+  // Beaches — polygon feature service
+  const beachesLayer = new FeatureLayer({
+    url: "https://services5.arcgis.com/GfwWNkhOj9bNBqoJ/ArcGIS/rest/services/nyc_beaches/FeatureServer/1",
     visible: false,
     title: "Beaches",
     renderer: {
       type: "simple",
       symbol: {
-        type: "simple-marker",
-        style: "circle",
-        color: [0, 150, 255, 0.9],
-        size: 14,
-        outline: { color: [255, 255, 255, 1], width: 1.5 }
+        type: "simple-fill",
+        color: [0, 150, 255, 0.4],
+        outline: { color: [0, 100, 200, 0.8], width: 1 }
       }
+    },
+    popupTemplate: {
+      title: "{name}",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "name",      label: "Beach Name" },
+          { fieldName: "agency",    label: "Agency" },
+          { fieldName: "gov_level", label: "Government Level" }
+        ]
+      }]
     }
   });
 
@@ -100,7 +109,7 @@ require([
 
   // Drinking Fountains — LIVE
   const fountainsLayer = new FeatureLayer({
-    url: "https://services3.arcgis.com/QnAlpI4OtHhbgGN9/arcgis/rest/services/NYC_Parks_Drinking_Fountains_20240129/FeatureServer/0",
+    url: "https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/NYC_Parks_Drinking_Fountains/FeatureServer/0",
     visible: false,
     title: "Drinking Fountains",
     renderer: {
@@ -117,10 +126,11 @@ require([
       content: [{
         type: "fields",
         fieldInfos: [
-          { fieldName: "propertyna", label: "Park / Property" },
-          { fieldName: "borough",    label: "Borough" },
-          { fieldName: "fountainty", label: "Fountain Type" },
-          { fieldName: "featuresta", label: "Status" }
+          { fieldName: "PropName",   label: "Park / Property" },
+          { fieldName: "Borough",    label: "Borough" },
+          { fieldName: "FountainTy", label: "Fountain Type" },
+          { fieldName: "FeatureSta", label: "Status" },
+          { fieldName: "Position",   label: "Position" }
         ]
       }]
     }
@@ -153,7 +163,7 @@ require([
           symbol: { type: "simple-marker", color: "#20B2AA", size: "10px", outline: { color: "#fff", width: 1 } }
         }
       ],
-      defaultSymbol: { type: "simple-marker", color: "#5F9EA0", size: "9px", outline: { color: "#fff", width: 1 } },
+      defaultSymbol: { type: "simple-marker", color: "#FF6347", size: "10px", outline: { color: "#fff", width: 1 } },
       defaultLabel: "Spray Adapter / Other"
     },
     popupTemplate: {
