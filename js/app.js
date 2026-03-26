@@ -7,14 +7,14 @@ require([
   "esri/layers/FeatureLayer",
   "esri/widgets/BasemapToggle",
   "esri/layers/GeoJSONLayer",
-  "esri/widgets/Search",
-  "esri/widgets/Search/LocatorSearchSource",
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
   "esri/geometry/geometryEngineAsync",
   "esri/widgets/Legend",
-  "esri/widgets/Expand"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, Search, LocatorSearchSource, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand) {
+  "esri/widgets/Expand",
+  "esri/widgets/Search",
+  "esri/widgets/Search/LocatorSearchSource"
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand, Search, LocatorSearchSource) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -475,19 +475,21 @@ function updateHviState() {
   });
   view.ui.add(basemapToggle, "bottom-right");
 
-  // Define a locator source 
+    // Search widget with geocoding
+  // Define a locator source for the Search widget that uses the ArcGIS World Geocoding Service
+
   var nycExtent = {
-    xmin: -74.30,
-    ymin: 40.45,
-    xmax: -73.65,
-    ymax: 40.95,
+    xmin: -74.25909,
+    ymin: 40.477399,
+    xmax: -73.700181,
+    ymax: 40.917577,
     spatialReference: { wkid: 4326 }
   }
 
-  var search = new Search ({
-    view : view,
-    includeDefaultSources : false,
-    sources:[
+  var search = new Search({
+    view: view,
+    includeDefaultSources: false,
+    sources: [
       new LocatorSearchSource({
         name: "NYC Address Search",
         placeholder: "Enter a New York City address",
@@ -495,13 +497,12 @@ function updateHviState() {
         singleLineFieldName: "SingleLine",
         countryCode:"USA",
         filter:{
-          geometry: nycExtent
+          geometry: nycExtent,
         }
       })
     ]
   });
-
-  view.ui.add(search, "top-right");
+  view.ui.add(search, "top-left");
 
   // ==========================================================================
   // LEGEND (collapsible, bottom-left, auto-hides when no 2D layers visible)
