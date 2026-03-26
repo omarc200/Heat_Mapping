@@ -7,8 +7,6 @@ require([
   "esri/layers/FeatureLayer",
   "esri/widgets/BasemapToggle",
   "esri/layers/GeoJSONLayer",
-  "esri/widgets/Search",
-  "esri/widgets/Search/LocatorSearchSource",
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
   "esri/geometry/geometryEngineAsync",
