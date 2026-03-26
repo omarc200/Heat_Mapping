@@ -7,12 +7,14 @@ require([
   "esri/layers/FeatureLayer",
   "esri/widgets/BasemapToggle",
   "esri/layers/GeoJSONLayer",
+  "esri/widgets/Search",
+  "esri/widgets/Search/LocatorSearchSource",
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
   "esri/geometry/geometryEngineAsync",
   "esri/widgets/Legend",
   "esri/widgets/Expand"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand) {
+], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, Search, LocatorSearchSource, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -470,6 +472,34 @@ const poolsLayer = new GeoJSONLayer({
     nextBasemap: "satellite"
   });
   view.ui.add(basemapToggle, "bottom-right");
+
+  // Define a locator source 
+  var nycExtent = {
+    xmin: -74.30,
+    ymin: 40.45,
+    xmax: -73.65,
+    ymax: 40.95,
+    spatialReference: { wkid: 4326 }
+  }
+
+  var search = new Search ({
+    view : view,
+    includeDefaultSources : false,
+    sources:[
+      new LocatorSearchSource({
+        name: "NYC Address Search",
+        placeholder: "Enter a New York City address",
+        url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer",
+        singleLineFieldName: "SingleLine",
+        countryCode:"USA",
+        filter:{
+          geometry: nycExtent
+        }
+      })
+    ]
+  });
+
+  view.ui.add(search, "top-right");
 
   // ==========================================================================
   // LEGEND (collapsible, bottom-left, auto-hides when no 2D layers visible)
