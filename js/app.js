@@ -64,12 +64,16 @@ require([
     url: "https://services5.arcgis.com/GfwWNkhOj9bNBqoJ/ArcGIS/rest/services/nyc_beaches/FeatureServer/1",
     visible: false,
     title: "Beaches",
+    // Drape polygons on the terrain surface. Without this, the SceneView defaults
+    // to absolute-height when features have Z coordinates, pinning the polygons at
+    // z=0 (sea level) and causing inland areas to render below the ground.
+    elevationInfo: { mode: "on-the-ground" },
     renderer: {
       type: "simple",
       symbol: {
         type: "simple-fill",
-        color: [0, 150, 255, 0.4],
-        outline: { color: [0, 100, 200, 0.8], width: 1 }
+        color: [255, 226, 156, 0.7],
+        outline: { color: [219, 154, 89, 0.9], width: 1 }
       }
     },
     popupTemplate: {
@@ -629,28 +633,47 @@ function updateHviState() {
   // dissolved ¼-mile (402m) geodesic buffer around them.
 
   view.when(function () {
-    fountainsLayer.queryFeatures({
-      where: "1=1",
-      returnGeometry: true,
-      outFields: ["ObjectId"]
-    }).then(function (result) {
-      var geometries = result.features.map(function (f) { return f.geometry; });
-      if (!geometries.length) return;
-      return geometryEngineAsync.geodesicBuffer(geometries, 402, "meters", true);
-    }).then(function (buffered) {
-      if (!buffered) return;
-      var geom = Array.isArray(buffered) ? buffered[0] : buffered;
-      fountainBufferLayer.add(new Graphic({
-        geometry: geom,
-        symbol: {
-          type: "simple-fill",
-          color: [30, 144, 255, 0.15],
-          outline: { color: [30, 100, 220, 0.5], width: 1 }
+    // Paginate through all fountain features in case the service's maxRecordCount
+    // is lower than the total feature count. Recurses until exceededTransferLimit
+    // is false, then resolves with the full geometry array.
+    function fetchAllFountainGeoms(start, accumulated) {
+      return fountainsLayer.queryFeatures({
+        where: "1=1",
+        returnGeometry: true,
+        outFields: ["*"],
+        num: 1000,
+        start: start
+      }).then(function (result) {
+        var geoms = accumulated.concat(
+          result.features.map(function (f) { return f.geometry; })
+        );
+        if (result.exceededTransferLimit) {
+          return fetchAllFountainGeoms(start + 1000, geoms);
         }
-      }));
-    }).catch(function (err) {
-      console.error("Fountain buffer generation failed:", err);
-    });
+        return geoms;
+      });
+    }
+
+    fetchAllFountainGeoms(0, [])
+      .then(function (geometries) {
+        if (!geometries.length) return;
+        return geometryEngineAsync.geodesicBuffer(geometries, 402, "meters", true);
+      })
+      .then(function (buffered) {
+        if (!buffered) return;
+        var geom = Array.isArray(buffered) ? buffered[0] : buffered;
+        fountainBufferLayer.add(new Graphic({
+          geometry: geom,
+          symbol: {
+            type: "simple-fill",
+            color: [30, 144, 255, 0.15],
+            outline: { color: [30, 100, 220, 0.5], width: 1 }
+          }
+        }));
+      })
+      .catch(function (err) {
+        console.error("Fountain buffer generation failed:", err);
+      });
   });
 
   // ==========================================================================
