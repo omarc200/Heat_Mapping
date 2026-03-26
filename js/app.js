@@ -289,6 +289,12 @@ const poolsLayer = new GeoJSONLayer({
     tilt: 0
   });
 
+  // Show/hide the loading spinner while the view is fetching or rendering.
+  var spinner = document.getElementById("map-spinner");
+  view.watch("updating", function (isUpdating) {
+    spinner.style.display = isUpdating ? "block" : "none";
+  });
+
   // Log the current map scale to the browser console whenever zoom changes.
   // Open DevTools (F12 → Console) to see these values while testing.
   // This can be removed once minScale thresholds are finalized.
