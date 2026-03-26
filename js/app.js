@@ -59,20 +59,33 @@ require([
     minScale: 25000
   });
 
-  // Beaches — local GeoJSON point data
-  const beachesLayer = new GeoJSONLayer({
-    url: "assets/beaches_points.geojson",
+  // Beaches — polygon feature service
+  const beachesLayer = new FeatureLayer({
+    url: "https://services5.arcgis.com/GfwWNkhOj9bNBqoJ/ArcGIS/rest/services/nyc_beaches/FeatureServer/1",
     visible: false,
     title: "Beaches",
+    // Drape polygons on the terrain surface. Without this, the SceneView defaults
+    // to absolute-height when features have Z coordinates, pinning the polygons at
+    // z=0 (sea level) and causing inland areas to render below the ground.
+    elevationInfo: { mode: "on-the-ground" },
     renderer: {
       type: "simple",
       symbol: {
-        type: "simple-marker",
-        style: "circle",
-        color: [0, 150, 255, 0.9],
-        size: 14,
-        outline: { color: [255, 255, 255, 1], width: 1.5 }
+        type: "simple-fill",
+        color: [255, 226, 156, 0.7],
+        outline: { color: [219, 154, 89, 0.9], width: 1 }
       }
+    },
+    popupTemplate: {
+      title: "{name}",
+      content: [{
+        type: "fields",
+        fieldInfos: [
+          { fieldName: "name",      label: "Beach Name" },
+          { fieldName: "agency",    label: "Agency" },
+          { fieldName: "gov_level", label: "Government Level" }
+        ]
+      }]
     }
   });
 
@@ -100,7 +113,7 @@ require([
 
   // Drinking Fountains — LIVE
   const fountainsLayer = new FeatureLayer({
-    url: "https://services3.arcgis.com/QnAlpI4OtHhbgGN9/arcgis/rest/services/NYC_Parks_Drinking_Fountains_20240129/FeatureServer/0",
+    url: "https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/NYC_Parks_Drinking_Fountains/FeatureServer/0",
     visible: false,
     title: "Drinking Fountains",
     renderer: {
@@ -117,10 +130,11 @@ require([
       content: [{
         type: "fields",
         fieldInfos: [
-          { fieldName: "propertyna", label: "Park / Property" },
-          { fieldName: "borough",    label: "Borough" },
-          { fieldName: "fountainty", label: "Fountain Type" },
-          { fieldName: "featuresta", label: "Status" }
+          { fieldName: "PropName",   label: "Park / Property" },
+          { fieldName: "Borough",    label: "Borough" },
+          { fieldName: "FountainTy", label: "Fountain Type" },
+          { fieldName: "FeatureSta", label: "Status" },
+          { fieldName: "Position",   label: "Position" }
         ]
       }]
     }
@@ -153,7 +167,7 @@ require([
           symbol: { type: "simple-marker", color: "#20B2AA", size: "10px", outline: { color: "#fff", width: 1 } }
         }
       ],
-      defaultSymbol: { type: "simple-marker", color: "#5F9EA0", size: "9px", outline: { color: "#fff", width: 1 } },
+      defaultSymbol: { type: "simple-marker", color: "#FF6347", size: "10px", outline: { color: "#fff", width: 1 } },
       defaultLabel: "Spray Adapter / Other"
     },
     popupTemplate: {
@@ -620,28 +634,47 @@ function updateHviState() {
   // dissolved ¼-mile (402m) geodesic buffer around them.
 
   view.when(function () {
-    fountainsLayer.queryFeatures({
-      where: "1=1",
-      returnGeometry: true,
-      outFields: ["ObjectId"]
-    }).then(function (result) {
-      var geometries = result.features.map(function (f) { return f.geometry; });
-      if (!geometries.length) return;
-      return geometryEngineAsync.geodesicBuffer(geometries, 402, "meters", true);
-    }).then(function (buffered) {
-      if (!buffered) return;
-      var geom = Array.isArray(buffered) ? buffered[0] : buffered;
-      fountainBufferLayer.add(new Graphic({
-        geometry: geom,
-        symbol: {
-          type: "simple-fill",
-          color: [30, 144, 255, 0.15],
-          outline: { color: [30, 100, 220, 0.5], width: 1 }
+    // Paginate through all fountain features in case the service's maxRecordCount
+    // is lower than the total feature count. Recurses until exceededTransferLimit
+    // is false, then resolves with the full geometry array.
+    function fetchAllFountainGeoms(start, accumulated) {
+      return fountainsLayer.queryFeatures({
+        where: "1=1",
+        returnGeometry: true,
+        outFields: ["*"],
+        num: 1000,
+        start: start
+      }).then(function (result) {
+        var geoms = accumulated.concat(
+          result.features.map(function (f) { return f.geometry; })
+        );
+        if (result.exceededTransferLimit) {
+          return fetchAllFountainGeoms(start + 1000, geoms);
         }
-      }));
-    }).catch(function (err) {
-      console.error("Fountain buffer generation failed:", err);
-    });
+        return geoms;
+      });
+    }
+
+    fetchAllFountainGeoms(0, [])
+      .then(function (geometries) {
+        if (!geometries.length) return;
+        return geometryEngineAsync.geodesicBuffer(geometries, 402, "meters", true);
+      })
+      .then(function (buffered) {
+        if (!buffered) return;
+        var geom = Array.isArray(buffered) ? buffered[0] : buffered;
+        fountainBufferLayer.add(new Graphic({
+          geometry: geom,
+          symbol: {
+            type: "simple-fill",
+            color: [30, 144, 255, 0.15],
+            outline: { color: [30, 100, 220, 0.5], width: 1 }
+          }
+        }));
+      })
+      .catch(function (err) {
+        console.error("Fountain buffer generation failed:", err);
+      });
   });
 
   // ==========================================================================
