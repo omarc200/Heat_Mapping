@@ -290,9 +290,24 @@ const poolsLayer = new GeoJSONLayer({
   });
 
   // Show/hide the loading spinner while the view is fetching or rendering.
+  // A 300ms debounce prevents the spinner from appearing during rapid per-frame
+  // re-renders (e.g. Daylight animation). The isAnimating guard provides a
+  // secondary check in case view.updating stays true throughout a long animation.
   var spinner = document.getElementById("map-spinner");
+  var spinnerTimeout = null;
+
   view.watch("updating", function (isUpdating) {
-    spinner.style.display = isUpdating ? "block" : "none";
+    if (isUpdating) {
+      spinnerTimeout = setTimeout(function () {
+        var isAnimating = daylightEl && (daylightEl.dayPlaying || daylightEl.yearPlaying);
+        if (!isAnimating) {
+          spinner.style.display = "block";
+        }
+      }, 300);
+    } else {
+      clearTimeout(spinnerTimeout);
+      spinner.style.display = "none";
+    }
   });
 
   // Log the current map scale to the browser console whenever zoom changes.
