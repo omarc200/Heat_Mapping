@@ -1,7 +1,6 @@
 require([
   "esri/Map",
   "esri/views/SceneView",
-  "esri/widgets/Home",
   "esri/widgets/Fullscreen",
   "esri/layers/SceneLayer",
   "esri/layers/FeatureLayer",
@@ -14,7 +13,7 @@ require([
   "esri/widgets/Expand",
   "esri/widgets/Search",
   "esri/widgets/Search/LocatorSearchSource"
-], function (Map, SceneView, Home, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand, Search, LocatorSearchSource) {
+], function (Map, SceneView, Fullscreen, SceneLayer, FeatureLayer, BasemapToggle, GeoJSONLayer, GraphicsLayer, Graphic, geometryEngineAsync, Legend, Expand, Search, LocatorSearchSource) {
 
   // ==========================================================================
   // LAYER DEFINITIONS
@@ -452,6 +451,22 @@ function updateHviState() {
     panelContent.appendChild(row);
   });
 
+  // "Clear All Layers" button at the bottom of the panel.
+  // Unchecks every checkbox and dispatches its change event so all existing
+  // handlers (including the HVI special cases) run correctly.
+  var clearAllBtn = document.createElement("button");
+  clearAllBtn.textContent = "Clear All Layers";
+  clearAllBtn.className = "clear-all-btn";
+  clearAllBtn.addEventListener("click", function () {
+    panelContent.querySelectorAll(".layer-checkbox").forEach(function (cb) {
+      if (cb.checked) {
+        cb.checked = false;
+        cb.dispatchEvent(new Event("change"));
+      }
+    });
+  });
+  panelContent.appendChild(clearAllBtn);
+
   updateHviState(); // Initialize HVI state based on checkboxes (both start unchecked, so HVI starts hidden)
   
   // Wire up the toggle button to expand/collapse
@@ -477,8 +492,28 @@ function updateHviState() {
   // WIDGETS
   // ==========================================================================
 
-  var home = new Home({ view: view });
-  view.ui.add(home, "top-left");
+  // Custom home button — replaces the Home widget so we have full control over
+  // click behavior. In 3D mode, resets center/zoom but preserves camera tilt and
+  // heading. Uses ESRI's own widget CSS classes so it looks identical to the built-in button.
+  var homeBtn = document.createElement("div");
+  homeBtn.className = "esri-component esri-widget--button esri-widget esri-interactive";
+  homeBtn.title = "Default extent";
+  homeBtn.setAttribute("role", "button");
+  homeBtn.setAttribute("tabindex", "0");
+  homeBtn.innerHTML = '<span aria-hidden="true" class="esri-icon esri-icon-home"></span>';
+
+  homeBtn.addEventListener("click", function () {
+    if (is3DMode) {
+      view.goTo(
+        { center: [-74.006, 40.7128], zoom: 12, tilt: view.camera.tilt, heading: view.camera.heading },
+        { duration: 1000 }
+      );
+    } else {
+      view.goTo({ center: [-74.006, 40.7128], zoom: 12, tilt: 0 }, { duration: 1000 });
+    }
+  });
+
+  view.ui.add(homeBtn, "top-left");
 
   var fullscreen = new Fullscreen({ view: view });
   view.ui.add(fullscreen, "top-right");
