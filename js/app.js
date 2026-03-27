@@ -258,12 +258,9 @@ const poolsLayer = new GeoJSONLayer({
   });
 
   // 3D Buildings (only visible in 3D mode, not in layer panel)
-  // Uses the direct SceneServer URL instead of a portalItem reference to avoid
-  // ArcGIS Online credential federation. When a portalItem is used, the
-  // IdentityManager fetches item info from www.arcgis.com and federates the
-  // user's stored ArcGIS Online credentials to basemaps3d.arcgis.com, causing
-  // the service to return empty tiles for accounts without the right subscription.
-  // The direct URL bypasses the portal lookup so the service is always hit anonymously.
+  // Using the Esri Living Atlas OSM-based layer for completeness. A prior auth bug
+  // (empty tiles for AGOL users without Living Atlas subscription) appeared once but
+  // could not be reproduced; monitoring during continued testing.
   const open3DBuildings = new SceneLayer({
     url: "https://basemaps3d.arcgis.com/arcgis/rest/services/Open3D_Buildings_v1/SceneServer",
     visible: false,
