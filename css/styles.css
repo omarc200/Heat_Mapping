@@ -94,6 +94,25 @@ html, body {
   vertical-align: middle;
 }
 
+.clear-all-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 5px 8px;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  color: #333;
+}
+
+.clear-all-btn:hover {
+  background: #e8e8e8;
+  border-color: #999;
+}
+
 /* ==========================================================================
    3D SHADOW TOOLS PANEL (in sidebar)
    ========================================================================== */
