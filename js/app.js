@@ -236,7 +236,7 @@ const poolsLayer = new GeoJSONLayer({
     url: "https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/Cool_Options/FeatureServer/0",
     visible: false,
     title: "Indoor Cooling Centers",
-    definitionExpression: "Space_type = 'Cooling Center'", 
+    definitionExpression: "Space_type IN ('Cooling Center', 'Other Indoor Cooling Option')", 
     renderer: {
       type: "simple",
       symbol: {
@@ -252,6 +252,10 @@ const poolsLayer = new GeoJSONLayer({
         type: "fields",
         fieldInfos: [
           { fieldName: "Facility_name", label: "Name" }, 
+          { fieldName: "Address", label: "Address" },
+          { fieldName: "Borough_name", label: "Borough" },
+          { fieldName: "ZIP_code", label: "ZIP Code" },
+          { fieldName: "Age_restriction", label: "Age Restriction" }
         ]
       }]
     }
