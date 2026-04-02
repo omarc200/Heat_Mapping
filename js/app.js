@@ -199,7 +199,7 @@ require([
       }
     },
     popupTemplate: {
-      title: "💦 Spray Shower",
+      title: "Spray Shower",
       content: [{
         type: "fields",
         fieldInfos: [
@@ -247,7 +247,7 @@ const poolsLayer = new GeoJSONLayer({
       }
     },
     popupTemplate: {
-      title: "❄️ Cooling Center",
+      title: "Indoor Cooling Center",
       content: [{
         type: "fields",
         fieldInfos: [
