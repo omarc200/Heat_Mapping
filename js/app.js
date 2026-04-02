@@ -32,7 +32,21 @@ require([
     url: "https://services2.arcgis.com/IsDCghZ73NgoYoz5/arcgis/rest/services/HVIbyCommunityDistrict_ForWeb/FeatureServer/0",
     visible: false,
     title: "Heat Vulnerability Index",
-    opacity: 0.7
+    opacity: 0.7,
+    popupTemplate: {
+      title: "{boro_cd}",
+      content: [
+        {
+          type: "fields",
+          fieldInfos:[
+            {fieldName: "Borough", label: "Borough"},
+            {fieldName: "CommDist", label: "Community District"},
+            {fieldName: "Neighborhood_CD", label: "Neighborhood"},
+            {fieldName:"HVI", label: "HVI Score"}
+          ]
+        }
+      ]
+    }
  });
 
   // Drinking Fountain walking distance buffer — placeholder (will be a client-side GraphicsLayer)
@@ -306,6 +320,35 @@ const poolsLayer = new GeoJSONLayer({
     zoom: 12,
     tilt: 0
   });
+
+  // Hover COde
+  let lastHVIGraphic = null;
+  
+  view.on("pointer-move", function(event){
+    view.hitTest(event, {include: [hviLayer]}).then(function(response){
+      const results = response.results;
+
+      if(!results.length){
+        lastHVIGraphic = null;
+        view.closePopup();
+        return;
+      }
+
+      const graphic = result[0].graphic;
+
+      if (lastHVIGraphic === graphic) return;
+      lastHVIGraphic = graphic;
+
+      view.openPopup({
+        location: event.mapPoint,
+        features: [graphic]
+      });
+    });
+  });
+  view.on("pointer-leave", function(){
+    lastHVIGraphic = null;
+    view.closePopup();
+  })
 
   // Log the current map scale to the browser console whenever zoom changes.
   // Open DevTools (F12 → Console) to see these values while testing.
