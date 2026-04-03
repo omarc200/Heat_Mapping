@@ -230,6 +230,20 @@ const poolsLayer = new GeoJSONLayer({
   url: "assets/pools_points.geojson",
   visible: false,
   title: "Pools",
+  popupTemplate:{
+    title: "{name}",
+    content: [
+      {
+        type: "fields",
+        fieldInfos:[
+          {fieldName: "name", label: "Pool Name"},
+          {fieldName: "location", label: "Location"},
+          {fieldName: "pooltype", label: "Pool Type"}
+        ]
+      }
+    ]
+
+  },
   renderer:{
     type: "simple",
     symbol: {
