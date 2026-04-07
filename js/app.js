@@ -32,7 +32,21 @@ require([
     url: "https://services2.arcgis.com/IsDCghZ73NgoYoz5/arcgis/rest/services/HVIbyCommunityDistrict_ForWeb/FeatureServer/0",
     visible: false,
     title: "Heat Vulnerability Index",
-    opacity: 0.7
+    opacity: 0.7,
+    popupTemplate: {
+      title: "Heat Vulnerability Index",
+      content: [
+        {
+          type: "fields",
+          fieldInfos:[
+            {fieldName: "Borough", label: "Borough"},
+            {fieldName: "CommDist", label: "Community District"},
+            {fieldName: "Neighborhood_CD", label: "Neighborhood"},
+            {fieldName:"HVI", label: "HVI Score"}
+          ]
+        }
+      ]
+    }
  });
 
   // Drinking Fountain walking distance buffer — placeholder (will be a client-side GraphicsLayer)
@@ -216,6 +230,20 @@ const poolsLayer = new GeoJSONLayer({
   url: "assets/pools_points.geojson",
   visible: false,
   title: "Pools",
+  popupTemplate:{
+    title: "{name}",
+    content: [
+      {
+        type: "fields",
+        fieldInfos:[
+          {fieldName: "name", label: "Pool Name"},
+          {fieldName: "location", label: "Location"},
+          {fieldName: "pooltype", label: "Pool Type"}
+        ]
+      }
+    ]
+
+  },
   renderer:{
     type: "simple",
     symbol: {
@@ -306,6 +334,59 @@ const poolsLayer = new GeoJSONLayer({
     zoom: 12,
     tilt: 0
   });
+
+  // NOTE: The code below was originally written to show HVI popups on hover rather
+  // than on click. It was commented out due to UX conflicts with click-based popups
+  // on other layers (popups were dismissed or overridden whenever the cursor moved).
+  // The HVI layer now uses the default ArcGIS click-based popup behavior via
+  // popupTemplate above. If you want to revisit hover behavior, start here —
+  // but note the pointer-move handler will need to avoid closing or replacing
+  // popups that were opened by clicking other features.
+
+  // let lastHVIGraphic = null;
+  // let hviHoverPopupOpen = false;
+
+  // view.on("pointer-move", function(event){
+  //   view.hitTest(event, {include: [hviLayer]}).then(function(response){
+  //     const results = response.results;
+
+  //     if(!results.length){
+  //       if (lastHVIGraphic !== null) {
+  //         lastHVIGraphic = null;
+  //         if (hviHoverPopupOpen) {
+  //           hviHoverPopupOpen = false;
+  //           view.closePopup();
+  //         }
+  //       }
+  //       return;
+  //     }
+
+  //     const graphic = results[0].graphic;
+
+  //     // Compare by attribute instead of object reference to prevent juddering
+  //     if (lastHVIGraphic && lastHVIGraphic.attributes.boro_cd === graphic.attributes.boro_cd) return;
+  //     lastHVIGraphic = graphic;
+
+  //     // Only open HVI popup if no click-based popup is currently showing
+  //     if (!view.popup.visible || hviHoverPopupOpen) {
+  //       hviHoverPopupOpen = true;
+  //       view.openPopup({
+  //         location: event.mapPoint,
+  //         features: [graphic]
+  //       });
+  //     }
+  //   });
+  // });
+
+  // view.on("pointer-leave", function(){
+  //   if (lastHVIGraphic !== null) {
+  //     lastHVIGraphic = null;
+  //     if (hviHoverPopupOpen) {
+  //       hviHoverPopupOpen = false;
+  //       view.closePopup();
+  //     }
+  //   }
+  // })
 
   // Log the current map scale to the browser console whenever zoom changes.
   // Open DevTools (F12 → Console) to see these values while testing.
