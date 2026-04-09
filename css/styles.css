@@ -16,6 +16,11 @@ html, body {
   background: #f5f5f5;
   border-right: 1px solid #ddd;
   overflow-y: auto;
+  font-size: 14px;
+}
+
+#sidebar p {
+  text-align: justify;
 }
 
 #viewDiv {
@@ -193,6 +198,23 @@ html, body {
    overflow-y enables scrolling when many layers are active.
    No double-scrollbar risk here because the per-layer Legend widgets
    do not have their own scroll containers. */
+/* ==========================================================================
+   DATA LAYERS ACCORDION (details/summary in sidebar)
+   ========================================================================== */
+
+#sidebar details {
+  margin-bottom: 5px;
+}
+
+#sidebar details summary {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   LEGEND (bottom-left, inside Expand widget)
+   ========================================================================== */
+
 #legend-container {
   background: #ffffff;
   max-height: 60vh;

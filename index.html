@@ -9,11 +9,11 @@
   <!--ArcGIS widgets and map UI come with built in styling-->
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
 
-  <!-- Our CSS, meant to seperate the build in styling -->
+  <!-- Our CSS, meant to separate the built in styling -->
    <!-- Sidebar width, layout, spacing, colors, map container-->
   <link rel="stylesheet" href="css/styles.css" />
 
-  <!-- ArcGIS JS SDK Gives us access to classes we will use -->
+  <!-- ArcGIS JS SDK gives us access to classes we will use -->
   <script src="https://js.arcgis.com/4.34/"></script>
 
   <!-- Calcite Design System (required by ArcGIS Map Components) -->
@@ -29,11 +29,10 @@
 
   <!-- Sidebar Panel -->
   <div id="sidebar">
-    <h2>NYC Heat Mapping</h2>
+    <h2>NYC Heat Planning</h2>
 
     <p>
-      This tool helps visualize heat exposure, shade coverage, and public cooling
-      resources across New York City.
+      This interactive spatial decision support web application is designed for use by planners at the New York City Department of Transportation and other city agencies to visualize and overlay the spatial distribution of summer heat risk and existing heat mitigation features in New York City. The primary goal of this web application is to help determine where new public drinking fountains should be installed to best address areas of the city with heightened risk of death during heat events and a lack of existing heat mitigation features.
     </p>
 
     <h3>Map Controls</h3>
@@ -71,6 +70,73 @@
         </label>
       </div>
     </div>
+
+    <hr />
+
+    <h3>2D Data Layers</h3>
+    <p>Click on a layer name to see additional information about its source, data vintage, and the features being depicted.</p>
+
+    <details>
+      <summary>Heat Vulnerability Index</summary>
+      <p>This layer classifies the Community Districts that comprise New York City based in their Heat Vulnerability Index (HVI). The HVI metric was calculated by the NYC Department of Health and Mental Hygiene (DOHMH) in 2023 to measure how the risk of heat-related death varies between neighborhoods in NYC. Community Districts are assigned an HVI value between 1 and 5, with 1 being the lowest risk of death during heat events and 5 being the highest. By selecting the checkbox labeled <strong>High Heat Risk Areas (HVI 4 or 5)</strong>, the user can visualize only those Community Districts with the highest risk of death during extreme heat events (with an HVI score of 4 or 5).</p>
+      <p>HVI scores aggregate the most important social and environmental factors contributing to neighborhood heat risk, including surface temperature, green space, access to home air conditioning, and the percentage of residents who are low-income or non-Hispanic Black. These factors reflect the impact that structural racism has on access to heat mitigation resources. Specifically, HVI is calculated by NYC DOHMH using a statistical model based on the following variables:</p>
+      <ul>
+        <li>Median household income (U.S. Census American Community Survey 2016–2020 5-year estimates)</li>
+        <li>Percent vegetative cover (trees, shrubs or grass) (2017 LiDAR, New York City Office of Technology and Innovation)</li>
+        <li>Percent of population reported as Non-Hispanic Black (U.S. Census American Community Survey 2016–2020 5-year estimates)</li>
+        <li>Average surface temperature in Fahrenheit from NASA's ECOSTRESS thermal imaging sensors (August 27, 2020)</li>
+        <li>Percent of households reporting air conditioning access (U.S. Census Housing and Vacancy Survey, 2017)</li>
+      </ul>
+      <p>More information on the HVI metric can be found <a href="https://a816-dohbesp.nyc.gov/IndicatorPublic/data-features/hvi/" target="_blank">here</a> and <a href="https://a816-dohbesp.nyc.gov/IndicatorPublic/data-explorer/climate/?id=2411#display=summary" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Drinking Fountains</summary>
+      <p>This layer depicts all drinking fountains in properties managed by the New York City Department of Parks and Recreation (DPR). The underlying dataset is maintained by DPR and was last updated in November 2024. Clicking on the point marker for an individual drinking fountain opens a pop-up containing information about the specific fountain, including the DPR property and borough in which it is located, the type and position of the fountain, and whether it is active. By selecting the checkbox labeled <strong>Walking Distance from Fountains</strong>, the user can visualize the areas of New York City within walking distance (a quarter mile) of a drinking fountain maintained by NYC DPR.</p>
+      <p>More information about the NYC DPR Drinking Fountains dataset can be found <a href="https://docs.google.com/document/d/1whu6gzwBbinNuoBx6FLpaaGOy4cdecOrjRdJEsHwJn8/edit?tab=t.0" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Cooling Sites</summary>
+      <p>This layer depicts 271 new public heat mitigation amenities (Cooling Sites) installed in New York City in or after July 2020 by the New York City Department of Parks and Recreation (DPR). These Cooling Sites include misting stations, hydrant spray caps, spray adapters, and other spray shower amenities installed in properties managed by DPR as part of its Cool It! NYC 2020 program. Cool It! NYC 2020 was a DPR program aimed at increasing the amount of cooling features available to the public during heat emergencies, particularly in neighborhoods that face the dangers of high heat. Cooling Site amenities were intentionally directed towards NYC neighborhoods with high heat risk (a score of 4 or 5 in the aforementioned Heat Vulnerability Index developed by the NYC Department of Health and Mental Hygiene). Clicking on the point marker for an individual Cooling Site opens a pop-up containing information about the specific site, including the DPR property and borough in which it is located, the type of amenity, and whether it is activated.</p>
+      <p>More information about the Cool It! NYC 2020 Cooling Sites dataset can be found <a href="https://docs.google.com/spreadsheets/d/1GpXHX9p0e520LcAf3gstOKTQm64wxkdDUiACjhMwd9Q/edit?gid=974986071#gid=974986071" target="_blank">here</a> and <a href="https://data.cityofnewyork.us/dataset/Cool-It-NYC-2020-Cooling-Sites/h2bn-gu9k/about_data" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Spray Showers</summary>
+      <p>This layer depicts outdoor spray showers in properties managed by the New York City Department of Parks and Recreation (DPR). It is a subset of NYC Cool Options, a citywide dataset of heat mitigation features maintained by the New York City Office of Technology and Innovation (OTI) for public consumption. Clicking on the point marker for an individual spray shower opens a pop-up containing information about the DPR property in which it is located.</p>
+      <p>More information about spray showers in NYC DPR properties can be found <a href="https://data.cityofnewyork.us/Recreation/NYC-Parks-Spray-Showers/ckaz-6gaa/about_data" target="_blank">here</a> and <a href="https://www.nycgovparks.org/facilities/sprayshowers" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Pools</summary>
+      <p>This layer depicts all indoor and outdoor public pools under the jurisdiction of the New York City Department of Parks and Recreation (DPR). The point features of this layer represent the centroid of every pool polygon in the underlying dataset, which is maintained by DPR and was last updated in March 2026. Clicking on the point marker for an individual pool opens a pop-up containing information about the specific pool, including its name, location (indoor or outdoor), and pool type.</p>
+      <p>More information about the underlying DPR pools dataset can be found <a href="https://data.cityofnewyork.us/Recreation/NYC-Parks-Pools/y5rm-wagw/about_data" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Beaches</summary>
+      <p>This layer depicts public and private beaches in New York City as polygonal areas. The underlying dataset is maintained by the New York City Department of City Planning (DCP) and was last updated in April 2024. Clicking on an individual beach polygon opens a pop-up containing information about the specific beach, including its name, the agency that is responsible for its oversight, and the government level of this agency (city, state, or federal).</p>
+      <p>More information about New York City public beaches can be found <a href="https://data.cityofnewyork.us/dataset/Beaches/ijwa-mn2v/about_data" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Indoor Cooling Centers</summary>
+      <p>This layer depicts indoor cooling centers in New York City. It is a subset of NYC Cool Options, a citywide dataset of heat mitigation features maintained by the New York City Office of Technology and Innovation (OTI) for public consumption. Indoor cooling centers are air-conditioned facilities designated to offer relief to the public during heat waves. They are activated by the city when the National Weather Service issues a heat advisory with a forecasted heat index of 95 degrees Fahrenheit or higher for two or more days, or 100 degrees Fahrenheit for any period of time. Cooling center facilities include public libraries, community centers, Older Adult Centers, NYCHA facilities, and Privately Owned Public Spaces. Clicking on the point marker for an individual indoor cooling center opens a pop-up containing information about the specific facility, including its name, address, and whether it is age-restricted.</p>
+      <p>More information about indoor cooling centers in NYC can be found <a href="https://portal.311.nyc.gov/article/?kanumber=KA-02663" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Tree Canopy Cover</summary>
+      <p>This layer depicts the areas of New York City covered by tree canopy as of 2017. The tree canopy polygons are the derived product of a land cover classification conducted by the University of Vermont Spatial Analysis Laboratory in collaboration with the New York City Office of Technology and Innovation (OTI). This classification was based on a capture of Light Detection and Ranging (LiDAR) point cloud data for the entirety of New York City, which was coordinated by OTI in 2017. The polygons in this web application are derived from a New York City land cover raster simplified to 1 foot resolution. <strong>Due to the large size of this dataset, it can only be viewed in this web application at a scale of 1:25,000 or finer.</strong></p>
+      <p>More information about the 2017 tree canopy change dataset can be found <a href="https://github.com/CityOfNewYork/nyc-geo-metadata/blob/main/Metadata/Metadata_TreeCanopyChange.md" target="_blank">here</a>, <a href="https://data.cityofnewyork.us/Environment/Tree-Canopy-Change-2010-2017-/by9k-vhck/about_data" target="_blank">here</a>, and <a href="https://maps.nyc.gov/lidar/2017/" target="_blank">here</a>.</p>
+    </details>
+
+    <details>
+      <summary>Building Footprints</summary>
+      <p>This layer depicts the full perimeter outline of buildings in New York City as viewed from directly above. It includes the footprint of every building in NYC greater than 400 square feet in area and taller than 12 feet. The underlying dataset is maintained by the New York City Office of Technology and Innovation (OTI) as part of its accurate "basemap" for NYC. It is continually updated based on annually captured aerial imagery and New York City Department of Buildings (DOB) records. <strong>Due to the large size of this dataset, it can only be viewed in this web application at a scale of 1:25,000 or finer.</strong></p>
+      <p>More information about the OTI building footprints dataset can be found <a href="https://github.com/CityOfNewYork/nyc-geo-metadata/blob/main/Metadata/Metadata_BuildingFootprints.md" target="_blank">here</a> or <a href="https://nycmaps-nyc.hub.arcgis.com/datasets/nyc::building/about" target="_blank">here</a>.</p>
+    </details>
 
   </div>
 
