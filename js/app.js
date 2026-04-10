@@ -132,10 +132,10 @@ require([
     renderer: {
       type: "simple",
       symbol: {
-        type: "simple-marker",
-        color: "#1E90FF",
-        size: "9px",
-        outline: { color: "#ffffff", width: 1.5 }
+        type: "picture-marker",
+        url: "assets/fountain.png",
+        width: "22px",
+        height: "22px"
       }
     },
     popupTemplate: {
@@ -163,6 +163,7 @@ require([
         </table>`
       }]
     }
+    
   });
 
   // Drinking Fountain ¼-mile dissolved buffer — LIVE (client-side, populated after view loads)
@@ -184,15 +185,15 @@ require([
         {
           value: "Misting Station",
           label: "Misting Station",
-          symbol: { type: "simple-marker", color: "#00CED1", size: "10px", outline: { color: "#fff", width: 1 } }
+          symbol: { type: "picture-marker", url: "assets/people.png",width: "20px", height: "20px" }
         },
         {
           value: "Hydrant Spray Cap",
           label: "Hydrant Spray Cap",
-          symbol: { type: "simple-marker", color: "#20B2AA", size: "10px", outline: { color: "#fff", width: 1 } }
+          symbol: { type: "picture-marker", url: "assets/fire-hydrant.png", width: "20px", height: "20px" }
         }
       ],
-      defaultSymbol: { type: "simple-marker", color: "#FF6347", size: "10px", outline: { color: "#fff", width: 1 } },
+      defaultSymbol: { type: "picture-marker", url: "assets/snow.png", width: "20px", height: "20px" },
       defaultLabel: "Spray Adapter / Other"
     },
     popupTemplate: {
@@ -218,10 +219,10 @@ require([
     renderer: {
       type: "simple",
       symbol: {
-        type: "simple-marker",
-        color: "#0078A8", 
-        size: "10px",
-        outline: { color: "#ffffff", width: 1 }
+        type: "picture-marker",
+        url: "assets/shower.png",
+        width: "20px",
+        height: "20px"
       }
     },
     popupTemplate: {
@@ -259,14 +260,10 @@ const poolsLayer = new GeoJSONLayer({
   renderer:{
     type: "simple",
     symbol: {
-        type:"simple-marker",
-        style: "circle",
-        color:[0,150,255,0.9],
-        size:14,
-        outline: {
-            color: [255,255,255,1],
-            width:1.5
-        }
+        type:"picture-marker",
+        url: "assets/pool.png",
+        width: "20px",
+        height: "20px"
     }
   }
 });
@@ -280,10 +277,10 @@ const poolsLayer = new GeoJSONLayer({
     renderer: {
       type: "simple",
       symbol: {
-        type: "simple-marker",
-        color: "#FF8C00", 
-        size: "10px",
-        outline: { color: "#ffffff", width: 1 }
+        type: "picture-marker",
+        url: "assets/indoor.png",
+        width: "20px", 
+        height: "20px"
       }
     },
     popupTemplate: {
