@@ -140,15 +140,27 @@ require([
     },
     popupTemplate: {
       title: "Drinking Fountain",
+      expressionInfos: [{
+        name: "borough-full",
+        expression: `
+          var code = $feature.Borough;
+          if (code == "M") return "Manhattan";
+          if (code == "B") return "Brooklyn";
+          if (code == "Q") return "Queens";
+          if (code == "X") return "The Bronx";
+          if (code == "R") return "Staten Island";
+          return code;
+        `
+      }],
       content: [{
-        type: "fields",
-        fieldInfos: [
-          { fieldName: "PropName",   label: "Park / Property" },
-          { fieldName: "Borough",    label: "Borough" },
-          { fieldName: "FountainTy", label: "Fountain Type" },
-          { fieldName: "FeatureSta", label: "Status" },
-          { fieldName: "Position",   label: "Position" }
-        ]
+        type: "text",
+        text: `<table class="esri-widget__table">
+          <tr><th>Park / Property</th><td>{PropName}</td></tr>
+          <tr><th>Borough</th><td>{expression/borough-full}</td></tr>
+          <tr><th><a href="https://docs.google.com/document/d/1whu6gzwBbinNuoBx6FLpaaGOy4cdecOrjRdJEsHwJn8/edit?tab=t.0" target="_blank">Fountain Type</a></th><td>{FountainTy}</td></tr>
+          <tr><th>Status</th><td>{FeatureSta}</td></tr>
+          <tr><th>Position</th><td>{Position}</td></tr>
+        </table>`
       }]
     }
   });
@@ -264,7 +276,7 @@ const poolsLayer = new GeoJSONLayer({
     url: "https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/Cool_Options/FeatureServer/0",
     visible: false,
     title: "Indoor Cooling Centers",
-    definitionExpression: "Space_type IN ('Cooling Center', 'Other Indoor Cooling Option')", 
+    definitionExpression: "Space_type IN ('Cooling Center', 'Other Indoor Cool Option')", 
     renderer: {
       type: "simple",
       symbol: {
@@ -388,12 +400,7 @@ const poolsLayer = new GeoJSONLayer({
   //   }
   // })
 
-  // Log the current map scale to the browser console whenever zoom changes.
-  // Open DevTools (F12 → Console) to see these values while testing.
-  // This can be removed once minScale thresholds are finalized.
   view.watch("scale", function (newScale) {
-    console.log("Current map scale: " + Math.round(newScale));
-
     // Disable/enable checkboxes for layers that have a minScale threshold.
     // When the map is zoomed out beyond a layer's minScale, its checkbox
     // and label are greyed out with a tooltip explaining why.
@@ -748,6 +755,15 @@ function updateHviState() {
   // Run once at startup (all layers start hidden, so legend starts hidden)
   updateLegendVisibility();
 
+  // Auto-collapse the legend Expand when the browser window is too narrow to
+  // display it without overflow. Below 886px the legend overflows and covers
+  // the map. The user can still re-expand manually after widening the window.
+  window.addEventListener("resize", function () {
+    if (window.innerWidth <= 886) {
+      legendExpand.expanded = false;
+    }
+  });
+
   // ==========================================================================
   // DRINKING FOUNTAIN BUFFER GENERATION
   // ==========================================================================
@@ -776,16 +792,48 @@ function updateHviState() {
       });
     }
 
-    fetchAllFountainGeoms(0, [])
-      .then(function (geometries) {
-        if (!geometries.length) return;
-        return geometryEngineAsync.geodesicBuffer(geometries, 402, "meters", true);
+    // Paginate through all HVI polygons (includes null-HVI districts) to build
+    // the NYC land boundary used to clip the fountain buffer to land only.
+    function fetchAllHVIGeoms(start, accumulated) {
+      return hviLayer.queryFeatures({
+        where: "1=1",
+        returnGeometry: true,
+        outFields: [],
+        outSpatialReference: view.spatialReference,
+        num: 1000,
+        start: start
+      }).then(function (result) {
+        var geoms = accumulated.concat(
+          result.features.map(function (f) { return f.geometry; })
+        );
+        if (result.exceededTransferLimit) {
+          return fetchAllHVIGeoms(start + 1000, geoms);
+        }
+        return geoms;
+      });
+    }
+
+    Promise.all([fetchAllFountainGeoms(0, []), fetchAllHVIGeoms(0, [])])
+      .then(function (results) {
+        var fountainGeoms = results[0];
+        var hviGeoms = results[1];
+        if (!fountainGeoms.length || !hviGeoms.length) return;
+        return Promise.all([
+          geometryEngineAsync.geodesicBuffer(fountainGeoms, 402, "meters", true),
+          geometryEngineAsync.union(hviGeoms)
+        ]);
       })
-      .then(function (buffered) {
-        if (!buffered) return;
-        var geom = Array.isArray(buffered) ? buffered[0] : buffered;
+      .then(function (results) {
+        if (!results) return;
+        var buffered = results[0];
+        var nycLand  = results[1];
+        var bufferGeom = Array.isArray(buffered) ? buffered[0] : buffered;
+        return geometryEngineAsync.intersect(bufferGeom, nycLand);
+      })
+      .then(function (clipped) {
+        if (!clipped) return;
         fountainBufferLayer.add(new Graphic({
-          geometry: geom,
+          geometry: clipped,
           symbol: {
             type: "simple-fill",
             color: [30, 144, 255, 0.15],
