@@ -234,4 +234,4 @@ The application is deployed via **GitHub Pages** from the `main` branch.
 ### Acknowledgments
 
 - [ArcGIS Maps SDK for JavaScript](https://developers.arcgis.com/javascript/latest/) — documentation and code samples
-- **Project Supervisor:** Romano Maddalena
+- **Project Supervisor:** Maddalena Romano
