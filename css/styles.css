@@ -19,8 +19,11 @@ html, body {
   font-size: 14px;
 }
 
-#sidebar p {
+#sidebar p,
+#sidebar li {
   text-align: justify;
+  font-size: 0.85rem;
+  color: #555;
 }
 
 #viewDiv {

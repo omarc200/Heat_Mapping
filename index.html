@@ -43,8 +43,7 @@
     <div id="tools-3d" class="tools-3d-hidden">
       <h3>3D Shadow Tools</h3>
       <p class="tools-3d-description">
-        Choose a shadow analysis mode for the 3D view. Both tools use
-        July 21 — the hottest day of the year on average in NYC.
+        Choose a shadow visualization tool for the 3D view. The default for both tools is <a href="https://www.extremeweatherwatch.com/cities/new-york/average-weather-by-day" target="_blank" rel="noopener noreferrer">July 21</a>, the hottest day of the year on average in NYC. <strong>Shadow visualizations should be viewed at a high zoom level to allow for proper rendering and visual appraisal.</strong>
       </p>
       <div class="tool-radio-group">
         <label class="tool-radio-row">
@@ -68,6 +67,31 @@
             <span class="tool-radio-detail">3D view without shadow tools.</span>
           </span>
         </label>
+      </div>
+
+      <div class="tools-3d-info">
+        <p>The <strong>Shadow Analysis</strong> tool has three distinct visualization modes showing the accumulation of shadows over time:</p>
+
+        <details>
+          <summary>Areas above threshold</summary>
+          <p>Shows areas in shadow longer than a given threshold within a larger time range. The default threshold of 4 hours can be adjusted. When the cursor hovers over the map, a popup indicates the total time in shadow during the larger time range at that location.</p>
+        </details>
+
+        <details>
+          <summary>Total shadow duration</summary>
+          <p>Depicts the cumulative shadow duration within a time range. The default symbology is a continuous blue color ramp that increases in opacity as shadow duration increases - areas with zero shadow duration are fully transparent. When the cursor hovers over the map, a popup indicates the total time in shadow during the time range at that location.</p>
+        </details>
+
+        <details>
+          <summary>Discrete shadows</summary>
+          <p>For a given time interval within a larger time range, overlays the cumulative shadow footprints for all the time intervals within the time range. Under the default app settings, this visualization overlays 14 snapshots, each showing the cumulative shadow footprint for one daylight hour on July 21, 2025. The default time interval of 1 hour can be adjusted.</p>
+        </details>
+
+        <p>For all three visualization modes, the default time range is <strong>6 AM to 8 PM (daylight hours) on July 21, 2025</strong>, but this time range and date can be adjusted.</p>
+
+        <p>The <strong>Daylight Animation</strong> tool provides an animation of how shadows change over time during the course of a single day. Pausing the animation allows the user to visualize the modeled footprint of all shadows at a given time of day. By default, the animation begins at 6 AM on July 21, 2025, but the date and time of day can be adjusted.</p>
+
+        <p>Both of our 3D shadow tools rely on 3D modeling components available via the ArcGIS Maps SDK for JavaScript. Within this app, the Shadow Analysis tool computes shadow accumulation based on the ESRI <a href="https://www.arcgis.com/home/item.html?id=c444b24b184c4523a5dc96248bfea4e1" target="_blank" rel="noopener noreferrer">Open 3D Buildings</a> layer, which is visible when 3D view is active. The Daylight Animation tool renders shadows based on both the Open 3D Buildings layer and the ESRI <a href="https://doc.arcgis.com/en/data-appliance/latest/imagery-elevation/terrain-3d.htm" target="_blank" rel="noopener noreferrer">World Elevation Terrain 3D</a> layer, which is also visible when 3D view is active.</p>
       </div>
     </div>
 
