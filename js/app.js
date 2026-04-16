@@ -907,7 +907,7 @@ function updateHviState() {
       // Configure Daylight defaults
       daylightEl.localDate = new Date(2025, 6, 21);
       daylightEl.utcOffset = -4;
-      daylightEl.timeSliderPosition = 8 * 60;
+      daylightEl.timeSliderPosition = 6 * 60;
       daylightEl.playSpeedMultiplier = 1.5;
       daylightEl.hideTimezone = true;
 
@@ -943,8 +943,8 @@ function updateHviState() {
     // Return the componentOnReady promise so we can configure after
     return shadowCastEl.componentOnReady().then(function () {
       shadowCastEl.date = new Date(2025, 6, 21);
-      shadowCastEl.startTimeOfDay = hoursToMs(8);
-      shadowCastEl.endTimeOfDay   = hoursToMs(18);
+      shadowCastEl.startTimeOfDay = hoursToMs(6);
+      shadowCastEl.endTimeOfDay   = hoursToMs(20);
       shadowCastEl.utcOffset = -4;
       shadowCastEl.setAttribute("mode", "total-duration");
 
@@ -1018,7 +1018,7 @@ function updateHviState() {
       // Set up lighting for Daylight
       view.environment.lighting = {
         type: "sun",
-        date: new Date("July 21, 2025 08:00:00 EDT"),
+        date: new Date("July 21, 2025 06:00:00 EDT"),
         directShadowsEnabled: true,
         cameraTrackingEnabled: false
       };
@@ -1029,7 +1029,7 @@ function updateHviState() {
       // Re-apply settings each time
       daylightEl.localDate = new Date(2025, 6, 21);
       daylightEl.utcOffset = -4;
-      daylightEl.timeSliderPosition = 8 * 60;
+      daylightEl.timeSliderPosition = 6 * 60;
       daylightEl.playSpeedMultiplier = 1.5;
       daylightEl.hideTimezone = true;
     }
