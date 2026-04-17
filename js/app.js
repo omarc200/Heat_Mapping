@@ -132,12 +132,16 @@ require([
     renderer: {
       type: "simple",
       symbol: {
-        type: "picture-marker",
-        url: "assets/fountain.png",
-        width: "22px",
-        height: "22px"
-      }
-    },
+      type: "simple-marker",
+      style: "circle",
+      color: [0, 150, 255, 0.8],   // nice water blue
+      size: 6,                     // smaller = less clutter
+      outline: {
+      color: [255, 255, 255, 0.8],
+      width: 1
+  }
+}
+},
     popupTemplate: {
       title: "Drinking Fountain",
       expressionInfos: [{
@@ -179,22 +183,39 @@ require([
     visible: false,
     title: "Cooling Sites",
     renderer: {
-      type: "unique-value",
-      field: "featuretype",
-      uniqueValueInfos: [
-        {
-          value: "Misting Station",
-          label: "Misting Station",
-          symbol: { type: "picture-marker", url: "assets/people.png",width: "20px", height: "20px" }
-        },
-        {
-          value: "Hydrant Spray Cap",
-          label: "Hydrant Spray Cap",
-          symbol: { type: "picture-marker", url: "assets/fire-hydrant.png", width: "20px", height: "20px" }
-        }
-      ],
-      defaultSymbol: { type: "picture-marker", url: "assets/snow.png", width: "20px", height: "20px" },
-      defaultLabel: "Spray Adapter / Other"
+  type: "unique-value",
+  field: "featuretype",
+  uniqueValueInfos: [
+    {
+      value: "Misting Station",
+      label: "Misting Station",
+      symbol: {
+        type: "simple-marker",
+        style: "circle",
+        color: [0, 200, 255, 0.9],
+        size: 7,
+        outline: { color: [255,255,255], width: 1 }
+      }
+    },
+    {
+      value: "Hydrant Spray Cap",
+      label: "Hydrant Spray Cap",
+      symbol: {
+        type: "simple-marker",
+        style: "circle",
+        color: [255, 100, 100, 0.9],
+        size: 7,
+        outline: { color: [255,255,255], width: 1 }
+      }
+    }
+  ],
+  defaultSymbol: {
+    type: "simple-marker",
+    style: "circle",
+    color: [180, 180, 255, 0.9],
+    size: 7
+  }
+
     },
     popupTemplate: {
       title: "Cooling Site",
@@ -219,11 +240,15 @@ require([
     renderer: {
       type: "simple",
       symbol: {
-        type: "picture-marker",
-        url: "assets/shower.png",
-        width: "20px",
-        height: "20px"
-      }
+  type: "simple-marker",
+  style: "circle",
+  color: [0, 255, 200, 0.9],
+  size: 6,
+  outline: {
+    color: [255,255,255],
+    width: 1
+  }
+}
     },
     popupTemplate: {
       title: "Spray Shower",
@@ -260,10 +285,14 @@ const poolsLayer = new GeoJSONLayer({
   renderer:{
     type: "simple",
     symbol: {
-        type:"picture-marker",
-        url: "assets/pool.png",
-        width: "20px",
-        height: "20px"
+  type: "simple-marker",
+  style: "circle",
+  color: [0, 120, 255, 0.9],
+  size: 7,
+  outline: {
+    color: [255,255,255],
+    width: 1
+    }
     }
   }
 });
@@ -277,11 +306,15 @@ const poolsLayer = new GeoJSONLayer({
     renderer: {
       type: "simple",
       symbol: {
-        type: "picture-marker",
-        url: "assets/indoor.png",
-        width: "20px", 
-        height: "20px"
-      }
+  type: "simple-marker",
+  style: "circle",
+  color: [255, 165, 0, 0.9],
+  size: 7,
+  outline: {
+    color: [255,255,255],
+    width: 1
+  }
+}
     },
     popupTemplate: {
       title: "Indoor Cooling Center",
