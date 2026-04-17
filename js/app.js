@@ -636,7 +636,7 @@ function updateHviState() {
     }
   });
 
-  view.ui.add(homeBtn, "top-left");
+  view.ui.add(homeBtn, {position:"top-left", index:0});
 
   var fullscreen = new Fullscreen({ view: view });
   view.ui.add(fullscreen, "top-right");
@@ -674,7 +674,10 @@ function updateHviState() {
       })
     ]
   });
-  view.ui.add(search, "top-left");
+  view.ui.add(search, {
+    position : "top-left",
+  index:0}
+  );
 
   // ==========================================================================
   // LEGEND (collapsible, bottom-left, auto-hides when no 2D layers visible)
