@@ -377,6 +377,39 @@ const poolsLayer = new GeoJSONLayer({
     tilt: 0
   });
 
+  // Suppress city/borough/town labels from the basemap reference layer.
+  // These labels ("New York", borough names, NJ towns) are visible at the default
+  // zoom level but add no value for city planners already working within NYC.
+  // Street, park, neighborhood, and water labels are preserved.
+  map.basemap.load().then(function () {
+    var refLayer = map.basemap.referenceLayers.getItemAt(0);
+    if (!refLayer) return;
+    refLayer.when(function () {
+      var styleInfo = refLayer.currentStyleInfo;
+      if (!styleInfo || !styleInfo.style) return;
+
+      var style = JSON.parse(JSON.stringify(styleInfo.style));
+
+      var toHide = [
+        "City large scale/town small",
+        "City large scale/town large",
+        "City large scale/small",
+        "City large scale/medium",
+        "City large scale/large",
+        "City large scale/x large"
+      ];
+
+      style.layers.forEach(function (layer) {
+        if (toHide.indexOf(layer.id) !== -1) {
+          if (!layer.layout) layer.layout = {};
+          layer.layout.visibility = "none";
+        }
+      });
+
+      refLayer.loadStyle(style);
+    });
+  });
+
   // NOTE: The code below was originally written to show HVI popups on hover rather
   // than on click. It was commented out due to UX conflicts with click-based popups
   // on other layers (popups were dismissed or overridden whenever the cursor moved).
@@ -646,6 +679,23 @@ function updateHviState() {
     nextBasemap: "satellite"
   });
   view.ui.add(basemapToggle, "bottom-right");
+
+  // Scale indicator — display-only widget showing the current map scale as a ratio.
+  // Hidden in 3D mode because SceneView.scale is unreliable when the camera is tilted.
+  var scaleIndicator = document.createElement("div");
+  scaleIndicator.id = "scale-indicator";
+
+  function formatScale(scale) {
+    return "1:" + Math.round(scale).toLocaleString();
+  }
+
+  scaleIndicator.textContent = formatScale(view.scale);
+
+  view.watch("scale", function (newScale) {
+    scaleIndicator.textContent = formatScale(newScale);
+  });
+
+  view.ui.add(scaleIndicator, "bottom-right");
 
     // Search widget with geocoding
   // Define a locator source for the Search widget that uses the ArcGIS World Geocoding Service
@@ -1112,6 +1162,9 @@ function updateHviState() {
       open3DBuildings.visible = true;
       toggleButton.textContent = "Switch to 2D";
 
+      // Hide scale indicator — unreliable with camera tilt applied
+      scaleIndicator.style.display = "none";
+
       // Hide the legend in 3D mode
       updateLegendVisibility();
 
@@ -1136,6 +1189,9 @@ function updateHviState() {
       // Switch to 2D mode
       open3DBuildings.visible = false;
       toggleButton.textContent = "Switch to 3D";
+
+      // Restore scale indicator
+      scaleIndicator.style.display = "";
 
       // Re-show the legend if any 2D layers are still active
       updateLegendVisibility();
