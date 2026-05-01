@@ -10,9 +10,9 @@ A browser-based spatial decision support tool that helps New York City planners 
 
 ## 2. Screenshots
 
-![App screenshot — 2D mode with layers active](screenshot-2d.png)
+![App screenshot — 2D mode with layers active](updated version.png) (updated versionn.png)
 
-![App screenshot — 3D mode with Shadow Cast active](screenshot-3d.png)
+![App screenshot — 3D mode with Shadow Cast active](updated versionnn.png)
 
 ---
 
