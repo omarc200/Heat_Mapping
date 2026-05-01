@@ -12,7 +12,7 @@ A browser-based spatial decision support tool that helps New York City planners 
 
 ![App screenshot — 2D mode with layers active](updated%20version.png)
 
-![App screenshot — 3D mode with Shadow Cast active](updated%20versionnn.png)
+![App screenshot — 3D mode with Shadow Cast active](updated%20versionnnnn.png)
 
 ---
 
