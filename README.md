@@ -19,17 +19,18 @@ A browser-based spatial decision support tool that helps New York City planners 
 ## 3. Features
 
 - **2D/3D view toggling** with animated camera transitions (tilt, heading) and automatic 3D building visibility.
-- **Shadow Cast tool:** cumulative shadow duration analysis over a configurable time window (8 AM – 6 PM, July 21).
-- **Daylight Animation tool:** real-time shadow scrubbing and playback across the day.
-- **Toggleable data layers** via a collapsible layer control panel with logical grouping.
-- **Heat Vulnerability Index** with an optional high-risk filter (HVI >= 4).
-- **Drinking fountain quarter-mile walking distance buffer** (client-side dissolved geodesic buffer).
-- **Collapsible map legend** that auto-hides in 3D mode and when no 2D layers are visible.
+- **Shadow Cast tool:** cumulative shadow duration analysis over a configurable time window (default is 6 AM – 8 PM, July 21).
+- **Daylight Animation tool:** real-time shadow animation scrubbing and playback across the day.
+- **Toggleable 2D data layers** via a collapsible layer control panel with logical grouping (heat risk layer first, followed by layers representing heat risk mitigation features).
+- **Heat Vulnerability Index** layer with citywide coverage and an optional filter for high heat risk areas (HVI >= 4).
+- **Drinking fountain walking distance (quarter-mile) buffer** (client-side dissolved geodesic buffer clipped to areas of land in New York City).
+- **Collapsible map legend** that dynamically reflects whichever 2D layers are active and auto-hides in 3D mode or when no 2D layers are visible.
 - **Address geosearch** constrained to New York City via the ArcGIS World Geocoding Service.
-- **Basemap switching** (default gray-vector with satellite toggle).
+- **Basemap switching toggle** (default gray vector basemap with satellite imagery mosaic as alternate option).
 - **Fullscreen mode.**
-- **Scale-dependent layer behavior:** checkboxes are greyed out with a tooltip when the map is zoomed out beyond a layer's visibility threshold.
-- **Popups on feature click** for all data layers.
+- **Scale-dependent layer behavior:** 2D layers with high feature counts (Tree Canopy and Building Footprints) can only be viewed at a 1:25,000 scale or finer. Above this scale threshold, their layer checkboxes are disabled with a warning tooltip.
+- **Scale indicator widget** that indicates current map scale as ratio and auto-hides in 3D mode (native ArcGIS scale bar widget is not supported in ArcGIS SceneView configuration, which must be used to support 3D mode.
+- **Popups on feature click** that provide feature-level information for most 2D data layers.
 - **Custom home button** that preserves camera tilt/heading in 3D mode.
 - **Clear All Layers button** to reset all layer visibility at once.
 
@@ -53,7 +54,7 @@ A browser-based spatial decision support tool that helps New York City planners 
 
 | File / Folder | Purpose |
 |---|---|
-| `index.html` | Page structure: map container, sidebar with 2D/3D toggle and 3D shadow tool radio buttons, CDN script/link tags. |
+| `index.html` | Page structure: map container, sidebar with 2D/3D toggle, 3D shadow tool radio buttons, explanatory text for app, and CDN script/link tags. |
 | `css/styles.css` | All custom styling: sidebar layout, layer panel, 3D tools panel, legend container, `layer-row-disabled` state, responsive rules. |
 | `js/app.js` | All application logic: layer definitions, map/view initialization, layer control panel construction, widget setup, fountain buffer generation, shadow tool management, 2D/3D toggle, legend management. |
 | `assets/` | Local data files: `pools_points.geojson`. Used by `GeoJSONLayer`. |
@@ -73,10 +74,10 @@ A browser-based spatial decision support tool that helps New York City planners 
 | Building Footprints | FeatureLayer | `https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/BUILDING_view/FeatureServer/0` | None |
 | Tree Canopy Cover | FeatureLayer | `https://services3.arcgis.com/xJHn8F2NTtwCMFtX/ArcGIS/rest/services/TreeCanopy2017_Simplified_1ft/FeatureServer/0` | None |
 | Drinking Fountains | FeatureLayer | `https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/NYC_Parks_Drinking_Fountains/FeatureServer/0` | None |
-| Fountain Walking Distance Buffer | GraphicsLayer | Generated client-side from Drinking Fountains layer using `geometryEngineAsync.geodesicBuffer` (402 m / 0.25 mi, dissolved) | N/A |
+| Drinking Fountain Walking Distance Buffer | GraphicsLayer | Generated client-side from Drinking Fountains layer using `geometryEngineAsync.geodesicBuffer` (402 m / 0.25 mi, dissolved, then clipped to just areas of land in NYC using union of Community Districts from HVI layer) | N/A |
 | Cooling Sites | FeatureLayer | `https://services2.arcgis.com/ZpsvDOsGv97WuKRh/arcgis/rest/services/Cool_it_Cooling_Sites/FeatureServer/0` | None |
 | Spray Showers | FeatureLayer | `https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/Cool_Options/FeatureServer/0` | `Space_type = 'Spray Shower'` |
-| Indoor Cooling Centers | FeatureLayer | `https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/Cool_Options/FeatureServer/0` | `Space_type = 'Cooling Center'` |
+| Indoor Cooling Centers | FeatureLayer | `https://services6.arcgis.com/yG5s3afENB5iO9fj/ArcGIS/rest/services/Cool_Options/FeatureServer/0` | `Space_type IN ('Cooling Center', 'Other Indoor Cool Option')` |
 | Pools | GeoJSONLayer | Local file: `assets/pools_points.geojson` | None |
 | Open 3D Buildings | SceneLayer | `https://basemaps3d.arcgis.com/arcgis/rest/services/Open3D_Buildings_v1/SceneServer` | None (internal use only; not in layer panel) |
 
