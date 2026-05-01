@@ -19,7 +19,7 @@ A browser-based spatial decision support tool that helps New York City planners 
 ## 3. Features
 
 - **2D/3D view toggling** with animated camera transitions (tilt, heading) and automatic 3D building visibility.
-- **Shadow Cast tool:** cumulative shadow duration analysis over a configurable time window (default is 6 AM – 8 PM, July 21).
+- **Shadow Cast tool:** cumulative shadow duration analysis over a configurable time window (default is 6 AM – 8 PM on July 21, 2025).
 - **Daylight Animation tool:** real-time shadow animation scrubbing and playback across the day.
 - **Toggleable 2D data layers** via a collapsible layer control panel with logical grouping (heat risk layer first, followed by layers representing heat risk mitigation features).
 - **Heat Vulnerability Index** layer with citywide coverage and an optional filter for high heat risk areas (HVI >= 4).
@@ -220,7 +220,7 @@ The application is deployed via **GitHub Pages** from the `main` branch.
 
 | Name | Role |
 |---|---|
-| Carlo Davis | Product Manager |
+| Carlo Davis | Project Manager |
 | Dayvian Pena | Software Engineer |
 | Boris Manzi | Software Engineer |
 | Omar Alvarez | Software Engineer |
