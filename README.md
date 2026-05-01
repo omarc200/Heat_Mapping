@@ -29,7 +29,7 @@ A browser-based spatial decision support tool that helps New York City planners 
 - **Basemap switching toggle** (default gray vector basemap with satellite imagery mosaic as alternate option).
 - **Fullscreen mode.**
 - **Scale-dependent layer behavior:** 2D layers with high feature counts (Tree Canopy and Building Footprints) can only be viewed at a 1:25,000 scale or finer. Above this scale threshold, their layer checkboxes are disabled with a warning tooltip.
-- **Scale indicator widget** that indicates current map scale as ratio and auto-hides in 3D mode (native ArcGIS scale bar widget is not supported in ArcGIS SceneView configuration, which must be used to support 3D mode.
+- **Scale indicator widget** that indicates current map scale as ratio and auto-hides in 3D mode (native ArcGIS scale bar widget is not supported in ArcGIS SceneView configuration, which must be used to support 3D mode).
 - **Popups on feature click** that provide feature-level information for most 2D data layers.
 - **Custom home button** that preserves camera tilt/heading in 3D mode.
 - **Clear All Layers button** to reset all layer visibility at once.
