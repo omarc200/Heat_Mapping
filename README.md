@@ -232,11 +232,11 @@ The application is deployed via **GitHub Pages** from the `main` branch.
 
 ### Data Sources
 
-- **NYC Department of Parks and Recreation (NYC Parks / DPR)** — Drinking Fountains, Spray Showers, Cooling Sites (from the Cool It! NYC 2020 program)
-- **NYC Office of Technology and Innovation (OTI)** — Building Footprints, Indoor Cooling Centers (from the NYC Cool Options dataset)
-- **NYC Department of Health and Mental Hygiene (DOHMH)** — Heat Vulnerability Index (community-district level)
+- **NYC Department of Parks and Recreation (NYC Parks / DPR)** — Drinking Fountains, Pools, Cooling Sites (from the Cool It! NYC 2020 program)
+- **NYC Office of Technology and Innovation (OTI)** — Spray Showers and Indoor Cooling Centers (from the NYC Cool Options dataset), 2D Building Footprints
+- **NYC Department of Health and Mental Hygiene (DOHMH)** — Heat Vulnerability Index (Community District level)
 - **NYC Department of City Planning (DCP)** — Beaches
-- **University of Vermont Spatial Analysis Laboratory + NYC OTI** — Tree Canopy Cover (2017), the derived product of a land-cover classification produced jointly
+- **University of Vermont Spatial Analysis Laboratory + NYC OTI** — 2017 Tree Canopy Cover (the jointly produced derived product of a land-cover classification)
 - **Esri** — Open 3D Buildings (ArcGIS Living Atlas)
 
 ### Acknowledgments
