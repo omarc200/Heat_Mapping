@@ -10,9 +10,9 @@ A browser-based spatial decision support tool that helps New York City planners 
 
 ## 2. Screenshots
 
-![App screenshot — 2D mode with layers active](updated%20version.png)
+![App screenshot — 2D mode with layers active](assets/screenshot-2d-layers.png)
 
-![App screenshot — 3D mode with Shadow Cast active](updated%20versionnnnn.png)
+![App screenshot — 3D mode with Shadow Cast active](assets/screenshot-3d-shadow-cast.png)
 
 ---
 
@@ -40,7 +40,7 @@ A browser-based spatial decision support tool that helps New York City planners 
 
 | Technology | Details |
 |---|---|
-| ArcGIS Maps SDK for JavaScript | v4.34, loaded via CDN (not npm). Uses the AMD `require()` module pattern. |
+| ArcGIS Maps SDK for JavaScript | JS loaded from `https://js.arcgis.com/4.34/` via CDN (not npm). Uses the AMD `require()` module pattern. The CSS theme is loaded separately from `https://js.arcgis.com/4.29/esri/themes/light/main.css` — the JS and CSS versions intentionally differ; this is not a typo. |
 | ArcGIS Map Components | Web components for Shadow Cast (`arcgis-shadow-cast`) and Daylight (`arcgis-daylight`). Loaded from the v4.34 CDN endpoint. |
 | Calcite Design System | v3.3.3. Required by ArcGIS Map Components. Loaded via CDN. |
 | HTML / CSS / JavaScript | Vanilla — no framework (no React, no Angular, no build tools). Single-page application. |
@@ -55,10 +55,10 @@ A browser-based spatial decision support tool that helps New York City planners 
 | File / Folder | Purpose |
 |---|---|
 | `index.html` | Page structure: map container, sidebar with 2D/3D toggle, 3D shadow tool radio buttons, explanatory text for app, and CDN script/link tags. |
-| `css/styles.css` | All custom styling: sidebar layout, layer panel, 3D tools panel, legend container, `layer-row-disabled` state, responsive rules. |
+| `css/styles.css` | All custom styling: sidebar layout (fluid width via `clamp()`), layer panel, 3D tools panel, legend container, and the `layer-row-disabled` state used when a layer is past its `minScale` threshold. |
 | `js/app.js` | All application logic: layer definitions, map/view initialization, layer control panel construction, widget setup, fountain buffer generation, shadow tool management, 2D/3D toggle, legend management. |
-| `assets/` | Local data files: `pools_points.geojson`. Used by `GeoJSONLayer`. |
-| `docs/` | Documentation assets (screenshots, user manual — if stored here). |
+| `assets/` | Local files served alongside the app. Includes `pools_points.geojson` (the source for the Pools `GeoJSONLayer`), `beaches_points.geojson`, the README screenshot images, and the layer icon PNGs (`drink-water.png`, `fire-hydrant.png`, `fountain.png`, `indoor.png`, `people.png`, `pool.png`, `shower.png`, `snow.png`) used in the layer panel and popups. |
+| `docs/` | Internal QA documents: `Testing Checklist.docx` and `checklist.md`. |
 | `README.md` | This project documentation file. |
 
 > The app is a single-page application with all logic consolidated in one JavaScript file (`app.js`). This was a deliberate choice given the project's scope and team experience level.
@@ -93,7 +93,6 @@ A browser-based spatial decision support tool that helps New York City planners 
 |---|---|
 | `esri/Map` | Core map object that holds all layers. |
 | `esri/views/SceneView` | 3D-capable map view (used for both 2D and 3D modes; 2D is achieved by setting tilt to 0). |
-| `esri/widgets/Home` | Custom home button that returns to the default NYC extent. |
 | `esri/widgets/Fullscreen` | Fullscreen toggle widget. |
 | `esri/layers/SceneLayer` | Open 3D Buildings layer. |
 | `esri/layers/FeatureLayer` | All ArcGIS REST-hosted data layers (HVI, Beaches, Building Footprints, Tree Canopy, Fountains, Cooling Sites, Spray Showers, Cooling Centers). |
@@ -106,6 +105,8 @@ A browser-based spatial decision support tool that helps New York City planners 
 | `esri/widgets/Expand` | Collapsible wrapper for the legend container. |
 | `esri/widgets/Search` | Address geosearch widget. |
 | `esri/widgets/Search/LocatorSearchSource` | Configures the Search widget to use the ArcGIS World Geocoding Service, constrained to NYC by bounding box. |
+
+> **Note on the home button:** The home button is **not** an instance of `esri/widgets/Home`. It is a hand-built `<div>` styled with ESRI's CSS classes (`esri-component esri-widget--button esri-widget esri-interactive` plus `esri-icon-home`). This was done so the click handler can preserve the user's current camera tilt and heading when in 3D mode, rather than snapping back to a default top-down extent the way the stock Home widget would.
 
 ### Web Components (loaded via `<script type="module">`)
 
@@ -139,9 +140,15 @@ The Open 3D Buildings SceneLayer is added last in the layers array but is toggle
 
 - **Direct REST loading:** Most layers (HVI, Beaches, Building Footprints, Tree Canopy, Fountains, Cooling Sites, Spray Showers, Cooling Centers) load directly from public ArcGIS REST feature service endpoints at runtime. No local data processing or transformation is performed — the SDK handles feature requests, caching, and rendering.
 - **Local GeoJSON:** The Pools layer loads from a local GeoJSON file (`assets/pools_points.geojson`) via `GeoJSONLayer`. The file is stored in the repository and served alongside the app.
-- **Client-side buffer generation:** The fountain walking distance buffer is generated entirely in the browser. On view load, the app paginates through all fountain features (querying 1,000 at a time to handle the service's `maxRecordCount` limit), then runs `geometryEngineAsync.geodesicBuffer()` with a 402-meter radius (approximately one quarter mile) and the dissolve flag set to `true`. The resulting single dissolved polygon is added to a `GraphicsLayer`.
+- **Client-side buffer generation:** The fountain walking distance buffer is generated entirely in the browser. On view load, the app runs the following pipeline:
+  1. Paginate through every fountain feature (querying 1,000 at a time to handle the service's `maxRecordCount` limit) via `fetchAllFountainGeoms`.
+  2. In parallel, paginate through every Heat Vulnerability Index community-district polygon via `fetchAllHVIGeoms`.
+  3. `geometryEngineAsync.geodesicBuffer(fountainGeoms, 402, "meters", true)` produces a single dissolved buffer polygon (402 m ≈ one quarter mile).
+  4. `geometryEngineAsync.union(hviGeoms)` merges the HVI polygons into a single NYC land geometry.
+  5. `geometryEngineAsync.intersect(buffer, nycLand)` clips the dissolved buffer to land only, so the buffer never bleeds into open water.
+  6. The clipped polygon is added to a `GraphicsLayer` as a single `Graphic`.
 - **Definition expressions:** Spray Showers and Indoor Cooling Centers are filtered from the same `Cool_Options` service using `definitionExpression` properties, which apply a SQL `WHERE` clause on the server side before features are returned to the client.
-- **Elevation handling:** Polygon layers like Beaches use `elevationInfo: { mode: 'on-the-ground' }` to prevent Z-coordinate rendering issues in the SceneView, which would otherwise pin polygons at sea level (z = 0).
+- **Elevation handling:** The **Beaches** layer is the only polygon layer that sets `elevationInfo: { mode: 'on-the-ground' }`. Without this, the SceneView defaults to absolute-height rendering for features that carry Z coordinates, which pins the polygons at z = 0 (sea level) and causes inland portions to render below the terrain. The other polygon layers (HVI, Building Footprints, Tree Canopy, Fountain buffer) do not need this override and do not set `elevationInfo`.
 
 ---
 
@@ -157,7 +164,6 @@ The Open 3D Buildings SceneLayer is added last in the layers array but is toggle
 
 - **Shadow Cast destroy/recreate pattern:** The ArcGIS SDK v4.34 provides no reliable way to hide or clear the Shadow Cast overlay once it has been rendered. The workaround is to destroy the `arcgis-shadow-cast` component entirely when the user deselects it, and recreate a fresh instance when they select it again.
 - **Daylight persistence:** Unlike Shadow Cast, the `arcgis-daylight` component is created once with `autoDestroyDisabled = true` and reused across activations. It is removed from the DOM when not active but not destroyed.
-- **2D polygon layers in 3D mode:** 2D polygon layers draped on the ground surface can obscure the shadow rendering. Programmatic hiding of these layers in 3D mode is partially implemented — behavior may vary depending on which layers are active when switching to 3D.
 - **Legend auto-hides in 3D:** The legend Expand widget is hidden in 3D mode since the 2D analytical layers are not the focus of the 3D view.
 
 ### 10c. Authentication
@@ -172,7 +178,6 @@ The Open 3D Buildings SceneLayer is added last in the layers array but is toggle
 
 ### 10e. Other Known Issues
 
-- A `view.watch('scale')` console logger is still present in `app.js`. It was left intentionally during development and can be removed before final release.
 - Any additional known bugs should be documented here with their status (e.g., deferred, in progress, won't fix) as they are identified.
 
 ---
@@ -227,10 +232,12 @@ The application is deployed via **GitHub Pages** from the `main` branch.
 
 ### Data Sources
 
-- **NYC Open Data / NYC Parks** — Drinking Fountains, Spray Showers, Cooling Centers, Building Footprints, Beaches
-- **ArcGIS Living Atlas / Esri** — Open 3D Buildings, Heat Vulnerability Index (NYC community district data), Cooling Sites (Cool It! program)
-- **NYC Parks / Urban Forestry** — Tree Canopy Cover (2017)
-- **NYC Office of Emergency Management** — Cooling Center data
+- **NYC Department of Parks and Recreation (NYC Parks / DPR)** — Drinking Fountains, Spray Showers, Cooling Sites (from the Cool It! NYC 2020 program)
+- **NYC Office of Technology and Innovation (OTI)** — Building Footprints, Indoor Cooling Centers (from the NYC Cool Options dataset)
+- **NYC Department of Health and Mental Hygiene (DOHMH)** — Heat Vulnerability Index (community-district level)
+- **NYC Department of City Planning (DCP)** — Beaches
+- **University of Vermont Spatial Analysis Laboratory + NYC OTI** — Tree Canopy Cover (2017), the derived product of a land-cover classification produced jointly
+- **Esri** — Open 3D Buildings (ArcGIS Living Atlas)
 
 ### Acknowledgments
 
