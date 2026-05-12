@@ -23,12 +23,12 @@ require([
   // When you add a new layer, you should:
   //   1. Define the layer variable here in the correct section
   //   2. Add it to the map.layers array below in the correct draw order position
-  //   3. Replace the null in layerRegistry with the layer variable
+  //   3. Add an entry mapping its checkbox ID to the layer in layerRegistry below
 
   // ---- Polygon layers (bottom of draw order) ----
 
-  // Heat Vulnerability Index — placeholder
-   const hviLayer = new FeatureLayer({ 
+  // Heat Vulnerability Index — LIVE
+   const hviLayer = new FeatureLayer({
     url: "https://services2.arcgis.com/IsDCghZ73NgoYoz5/arcgis/rest/services/HVIbyCommunityDistrict_ForWeb/FeatureServer/0",
     visible: false,
     title: "Heat Vulnerability Index",
@@ -48,9 +48,6 @@ require([
       ]
     }
  });
-
-  // Drinking Fountain walking distance buffer — placeholder (will be a client-side GraphicsLayer)
-  // const fountainBufferLayer = new GraphicsLayer({ visible: false, title: "Walking Distance from Fountains" });
 
   // Tree Canopy Cover — LIVE
   const treeCanopyLayer = new FeatureLayer({
@@ -174,7 +171,7 @@ require([
   const fountainBufferLayer = new GraphicsLayer({
     visible: false,
     title: "Walking Distance from Fountains",
-    legendEnabled: false  // GraphicsLayer not supported by Legend widget; custom swatch used instead
+    legendEnabled: false  // GraphicsLayer not supported by Legend widget; excluded from legend
   });
 
   // Cooling Sites (Cool It!) — LIVE
@@ -214,7 +211,8 @@ require([
     style: "circle",
     color: [180, 180, 255, 0.9],
     size: 7
-  }
+  },
+  defaultLabel: "Spray Adapter / Other"
 
     },
     popupTemplate: {
@@ -245,7 +243,7 @@ require([
   color: [0, 255, 200, 0.9],
   size: 6,
   outline: {
-    color: [255,255,255],
+    color: [160, 160, 160],
     width: 1
   }
 }
@@ -262,8 +260,7 @@ require([
   });
 
 
-  // Pools — placeholder
- // Pools source data (polygon GeoJSON)
+  // Pools — LIVE (point GeoJSON)
 const poolsLayer = new GeoJSONLayer({
   url: "assets/pools_points.geojson",
   visible: false,
@@ -358,11 +355,13 @@ const poolsLayer = new GeoJSONLayer({
       fountainBufferLayer,
 
       // --- Point layers (top of draw order) ---
-      fountainsLayer,
+      // fountainsLayer is intentionally last so drinking fountains render
+      // on top of every other 2D feature — they're the primary planning focus.
       coolingSitesLayer,
       sprayShowersLayer,
       coolingCentersLayer,
       poolsLayer,
+      fountainsLayer,
 
       // 3D buildings (toggled separately via 2D/3D button)
       open3DBuildings
@@ -391,12 +390,33 @@ const poolsLayer = new GeoJSONLayer({
       var style = JSON.parse(JSON.stringify(styleInfo.style));
 
       var toHide = [
+        // "City large scale/..." — visible at the default zoom and finer
         "City large scale/town small",
         "City large scale/town large",
         "City large scale/small",
         "City large scale/medium",
         "City large scale/large",
-        "City large scale/x large"
+        "City large scale/x large",
+        // "City small scale/..." — visible when zoomed out beyond the default
+        "City small scale/town small non capital",
+        "City small scale/town large non capital",
+        "City small scale/small non capital",
+        "City small scale/medium non capital",
+        "City small scale/large non capital",
+        "City small scale/x large non capital",
+        "City small scale/other capital",
+        "City small scale/town large other capital",
+        "City small scale/small other capital",
+        "City small scale/medium other capital",
+        "City small scale/large other capital",
+        "City small scale/town small admin0 capital",
+        "City small scale/town large admin0 capital",
+        "City small scale/small admin0 capital",
+        "City small scale/medium admin0 capital",
+        "City small scale/large admin0 capital",
+        "City small scale/x large admin0 capital",
+        "City small scale/x large admin1 capital",
+        "City small scale/x large admin2 capital"
       ];
 
       style.layers.forEach(function (layer) {
@@ -409,59 +429,6 @@ const poolsLayer = new GeoJSONLayer({
       refLayer.loadStyle(style);
     });
   });
-
-  // NOTE: The code below was originally written to show HVI popups on hover rather
-  // than on click. It was commented out due to UX conflicts with click-based popups
-  // on other layers (popups were dismissed or overridden whenever the cursor moved).
-  // The HVI layer now uses the default ArcGIS click-based popup behavior via
-  // popupTemplate above. If you want to revisit hover behavior, start here —
-  // but note the pointer-move handler will need to avoid closing or replacing
-  // popups that were opened by clicking other features.
-
-  // let lastHVIGraphic = null;
-  // let hviHoverPopupOpen = false;
-
-  // view.on("pointer-move", function(event){
-  //   view.hitTest(event, {include: [hviLayer]}).then(function(response){
-  //     const results = response.results;
-
-  //     if(!results.length){
-  //       if (lastHVIGraphic !== null) {
-  //         lastHVIGraphic = null;
-  //         if (hviHoverPopupOpen) {
-  //           hviHoverPopupOpen = false;
-  //           view.closePopup();
-  //         }
-  //       }
-  //       return;
-  //     }
-
-  //     const graphic = results[0].graphic;
-
-  //     // Compare by attribute instead of object reference to prevent juddering
-  //     if (lastHVIGraphic && lastHVIGraphic.attributes.boro_cd === graphic.attributes.boro_cd) return;
-  //     lastHVIGraphic = graphic;
-
-  //     // Only open HVI popup if no click-based popup is currently showing
-  //     if (!view.popup.visible || hviHoverPopupOpen) {
-  //       hviHoverPopupOpen = true;
-  //       view.openPopup({
-  //         location: event.mapPoint,
-  //         features: [graphic]
-  //       });
-  //     }
-  //   });
-  // });
-
-  // view.on("pointer-leave", function(){
-  //   if (lastHVIGraphic !== null) {
-  //     lastHVIGraphic = null;
-  //     if (hviHoverPopupOpen) {
-  //       hviHoverPopupOpen = false;
-  //       view.closePopup();
-  //     }
-  //   }
-  // })
 
   view.watch("scale", function (newScale) {
     // Disable/enable checkboxes for layers that have a minScale threshold.
@@ -504,7 +471,6 @@ const poolsLayer = new GeoJSONLayer({
   // ==========================================================================
 
   // Layer registry: connects each checkbox ID to its layer object.
-  // When you add a real layer, replace null with the layer variable.
   var layerRegistry = {
     "hvi":                 hviLayer,
     "hvi-high":            null,   // This will be a filter on hviLayer, not a separate layer
@@ -701,6 +667,7 @@ function updateHviState() {
   // Define a locator source for the Search widget that uses the ArcGIS World Geocoding Service
 
   var nycExtent = {
+    type: "extent",
     xmin: -74.25909,
     ymin: 40.477399,
     xmax: -73.700181,
@@ -714,13 +681,14 @@ function updateHviState() {
     sources: [
       new LocatorSearchSource({
         name: "NYC Address Search",
-        placeholder: "Enter a New York City address",
+        placeholder: "Enter an NYC address",
         url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer",
         singleLineFieldName: "SingleLine",
         countryCode:"USA",
-        filter:{
-          geometry: nycExtent,
-        }
+        // searchExtent biases the World Geocoder toward this bbox via its
+        // `bbox` parameter. It's a strong preference, not a hard cutoff —
+        // unambiguous out-of-NYC addresses can still resolve.
+        searchExtent: nycExtent
       })
     ]
   });
@@ -921,6 +889,10 @@ function updateHviState() {
             type: "simple-fill",
             color: [30, 144, 255, 0.15],
             outline: { color: [30, 100, 220, 0.5], width: 1 }
+          },
+          popupTemplate: {
+            title: "Walking Distance from Fountains",
+            content: "All areas of New York City within a quarter mile of a public drinking fountain managed by the NYC Department of Parks and Recreation"
           }
         }));
       })
@@ -975,7 +947,6 @@ function updateHviState() {
       customElements.whenDefined("arcgis-daylight")
     ]).then(function () {
       componentsRegistered = true;
-      console.log("Custom elements registered.");
 
       // --- Initialize Daylight (persistent, reused across activations) ---
       daylightEl = document.createElement("arcgis-daylight");
@@ -1002,7 +973,6 @@ function updateHviState() {
       daylightEl.style.display = "";
 
       daylightInitialized = true;
-      console.log("Daylight component initialized.");
 
       if (callback) callback();
 
@@ -1035,8 +1005,6 @@ function updateHviState() {
       shadowCastEl.setAttribute("mode", "total-duration");
 
       view.environment.lighting.directShadowsEnabled = true;
-
-      console.log("Shadow Cast component created and configured.");
     });
   }
 
@@ -1058,7 +1026,6 @@ function updateHviState() {
       }
 
       shadowCastEl = null;
-      console.log("Shadow Cast component destroyed.");
     }
   }
 
@@ -1210,7 +1177,5 @@ function updateHviState() {
       );
     }
   });
-  
-      
 });
 
