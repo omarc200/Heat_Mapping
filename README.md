@@ -25,14 +25,15 @@ A browser-based spatial decision support tool that helps New York City planners 
 - **Heat Vulnerability Index** layer with citywide coverage and an optional filter for high heat risk areas (HVI >= 4).
 - **Drinking fountain walking distance (quarter-mile) buffer** (client-side dissolved geodesic buffer clipped to areas of land in New York City).
 - **Collapsible map legend** that dynamically reflects whichever 2D layers are active and auto-hides in 3D mode or when no 2D layers are visible.
-- **Address geosearch** constrained to New York City via the ArcGIS World Geocoding Service.
+- **Address geosearch** biased to New York City via the ArcGIS World Geocoding Service.
 - **Basemap switching toggle** (default gray vector basemap with satellite imagery mosaic as alternate option).
 - **Fullscreen mode.**
 - **Scale-dependent layer behavior:** 2D layers with high feature counts (Tree Canopy and Building Footprints) can only be viewed at a 1:25,000 scale or finer. Above this scale threshold, their layer checkboxes are disabled with a warning tooltip.
 - **Scale indicator widget** that indicates current map scale as ratio and auto-hides in 3D mode (native ArcGIS scale bar widget is not supported in ArcGIS SceneView configuration, which must be used to support 3D mode).
-- **Popups on feature click** that provide feature-level information for most 2D data layers.
+- **Popups on feature click** that provide feature-level information for most 2D data layers, including a click-to-identify popup on the Drinking Fountain Walking Distance Buffer.
 - **Custom home button** that preserves camera tilt/heading in 3D mode.
 - **Clear All Layers button** to reset all layer visibility at once.
+- **User Manual link** in the sidebar that opens a standalone user manual page in a new tab.
 
 ---
 
@@ -55,11 +56,13 @@ A browser-based spatial decision support tool that helps New York City planners 
 | File / Folder | Purpose |
 |---|---|
 | `index.html` | Page structure: map container, sidebar with 2D/3D toggle, 3D shadow tool radio buttons, explanatory text for app, and CDN script/link tags. |
+| `user-manual.html` | Standalone HTML page containing the full user manual for the app — overview, instructions, screenshots, and reference content. Opened in a new tab from the "User Manual" link in `index.html`'s sidebar. |
 | `css/styles.css` | All custom styling: sidebar layout (fluid width via `clamp()`), layer panel, 3D tools panel, legend container, and the `layer-row-disabled` state used when a layer is past its `minScale` threshold. |
 | `js/app.js` | All application logic: layer definitions, map/view initialization, layer control panel construction, widget setup, fountain buffer generation, shadow tool management, 2D/3D toggle, legend management. |
-| `assets/` | Local files served alongside the app. Includes `pools_points.geojson` (the source for the Pools `GeoJSONLayer`), `beaches_points.geojson`, the README screenshot images, and the layer icon PNGs (`drink-water.png`, `fire-hydrant.png`, `fountain.png`, `indoor.png`, `people.png`, `pool.png`, `shower.png`, `snow.png`) used in the layer panel and popups. |
-| `docs/` | Internal QA documents: `Testing Checklist.docx` and `checklist.md`. |
+| `assets/` | Local files served alongside the app. Contains `pools_points.geojson` (the source for the Pools `GeoJSONLayer`) and the README screenshot images (`screenshot-2d-layers.png`, `screenshot-3d-shadow-cast.png`). |
+| `docs/` | Internal QA documents: `Testing Checklist.docx`, `QA Checklist.docx`, and `checklist.md`. |
 | `README.md` | This project documentation file. |
+| `LICENSE` | Open-source license for the project. |
 
 > The app is a single-page application with all logic consolidated in one JavaScript file (`app.js`). This was a deliberate choice given the project's scope and team experience level.
 
@@ -104,7 +107,7 @@ A browser-based spatial decision support tool that helps New York City planners 
 | `esri/widgets/Legend` | Per-layer legend instances assembled in a custom container for controlled display order. |
 | `esri/widgets/Expand` | Collapsible wrapper for the legend container. |
 | `esri/widgets/Search` | Address geosearch widget. |
-| `esri/widgets/Search/LocatorSearchSource` | Configures the Search widget to use the ArcGIS World Geocoding Service, constrained to NYC by bounding box. |
+| `esri/widgets/Search/LocatorSearchSource` | Configures the Search widget to use the ArcGIS World Geocoding Service, biased to NYC via a `searchExtent` bounding box (strong preference, not a hard cutoff). |
 
 > **Note on the home button:** The home button is **not** an instance of `esri/widgets/Home`. It is a hand-built `<div>` styled with ESRI's CSS classes (`esri-component esri-widget--button esri-widget esri-interactive` plus `esri-icon-home`). This was done so the click handler can preserve the user's current camera tilt and heading when in 3D mode, rather than snapping back to a default top-down extent the way the stock Home widget would.
 
@@ -126,11 +129,13 @@ Draw order from bottom (drawn first) to top (drawn last):
 3. Building Footprints (polygon)
 4. Tree Canopy Cover (polygon)
 5. Fountain Walking Distance Buffer (polygon, GraphicsLayer)
-6. Drinking Fountains (point)
-7. Cooling Sites (point)
-8. Spray Showers (point)
-9. Indoor Cooling Centers (point)
-10. Pools (point)
+6. Cooling Sites (point)
+7. Spray Showers (point)
+8. Indoor Cooling Centers (point)
+9. Pools (point)
+10. Drinking Fountains (point)
+
+Drinking Fountains is positioned last on purpose because it is the primary planning focus of the app — the intent is for fountain markers to render above every other 2D feature. In practice, the `SceneView` rendering pipeline does not strictly honor the `map.layers` order for point markers once layers are toggled on mid-session: a point layer activated *after* Drinking Fountains will render on top of it. See *Known Issues* below.
 
 The Open 3D Buildings SceneLayer is added last in the layers array but is toggled independently by the 2D/3D switch and does not appear in the layer control panel.
 
@@ -159,12 +164,14 @@ The Open 3D Buildings SceneLayer is added last in the layers array but is toggle
 - **Scale thresholds:** Tree Canopy Cover and Building Footprints both use `minScale: 25000` because they contain very large numbers of features that cause severe performance degradation at citywide zoom levels. The layers only begin loading when the user zooms in past this threshold.
 - **Fountain buffer load time:** The client-side buffer generation requires querying all fountain features (several thousand) and running a geodesic buffer calculation. This takes several seconds after the view first loads. The buffer layer is not available until this completes.
 - **Scale-dependent UI feedback:** When the map is zoomed out beyond a layer's `minScale`, the corresponding checkbox in the layer panel is disabled and greyed out, and a tooltip reads "Zoom in to enable this layer." This prevents users from toggling layers that would not render at the current zoom.
+- **Tree Canopy Cover renders donut polygons as filled at all but the most zoomed-in scales.** The Tree Canopy dataset contains many polygon features with interior holes (e.g., a tree canopy ring surrounding an open clearing). At the zoom levels where the layer is served from cached/simplified WebGL vector tiles, the tile generation pipeline drops the interior rings, so the polygons render as fully filled rather than as donuts. The only known fix is to bypass vector-tile caching and query/serve all 1M+ polygons individually on every map move, which would severely degrade the layer's performance — Tree Canopy is already the least performant layer in the app, though within the realm of acceptability. **Status: won't fix.** Donut polygons render correctly at the most zoomed-in scales, where features are loaded individually rather than from simplified tiles.
 
 ### 10b. 3D Mode Constraints
 
 - **Shadow Cast destroy/recreate pattern:** The ArcGIS SDK v4.34 provides no reliable way to hide or clear the Shadow Cast overlay once it has been rendered. The workaround is to destroy the `arcgis-shadow-cast` component entirely when the user deselects it, and recreate a fresh instance when they select it again.
 - **Daylight persistence:** Unlike Shadow Cast, the `arcgis-daylight` component is created once with `autoDestroyDisabled = true` and reused across activations. It is removed from the DOM when not active but not destroyed.
 - **Legend auto-hides in 3D:** The legend Expand widget is hidden in 3D mode since the 2D analytical layers are not the focus of the 3D view.
+- **No native scale bar widget in `SceneView`.** The ArcGIS Maps SDK's `ScaleBar` widget is supported only in `MapView`, not `SceneView`. Because the app requires `SceneView` to enable 3D mode, the standard scale bar is unavailable. As a substitute, the app uses a small custom scale indicator widget that displays the current map scale as a ratio (e.g., `1:25,000`) in the bottom-right corner. It auto-hides in 3D mode because `SceneView.scale` is unreliable when the camera is tilted.
 
 ### 10c. Authentication
 
@@ -178,6 +185,8 @@ The Open 3D Buildings SceneLayer is added last in the layers array but is toggle
 
 ### 10e. Other Known Issues
 
+- **Drinking Fountain Walking Distance Buffer is not represented in the legend.** The buffer is rendered via a `GraphicsLayer` (the only `GraphicsLayer` among the app's 2D layers), and the ArcGIS `Legend` widget does not support `GraphicsLayer` — there is no native legend entry for it. A custom HTML swatch was prototyped and inserted into the stacked per-layer legend container, but it broke the container's layout and was reverted. **Status: won't fix.** The buffer's translucent blue fill is visible on the map when active. To partially compensate for the missing legend entry, a click-to-open popup is bound to the buffer polygon that identifies the layer ("Walking Distance from Fountains") and explains what it represents.
+- **Point layer draw order is not strictly honored in `SceneView`.** The `map.layers` array defines a canonical draw order (see Section 8), but the `SceneView` rendering pipeline only respects it for polygon layers. For point layers, the layer most recently toggled on tends to render on top of point layers activated earlier in the session, regardless of position in `map.layers`. Workarounds (re-asserting layer order via `map.layers.reorder` or removing/re-adding the layer) were tested and either had no effect or introduced unacceptable flicker and re-fetch costs. **Status: won't fix.** A page refresh resets the render order to match the canonical sequence.
 - Any additional known bugs should be documented here with their status (e.g., deferred, in progress, won't fix) as they are identified.
 
 ---

@@ -232,6 +232,37 @@ html, body {
    SCALE INDICATOR (bottom-right, left of basemap toggle)
    ========================================================================== */
 
+/* ==========================================================================
+   SEARCH WIDGET (geocoder)
+   ========================================================================== */
+
+/* Stretch the submit button to match the input field's height
+   instead of sitting at its content's natural height. */
+.esri-search__submit-button {
+  align-self: stretch;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Shrink the input font so the placeholder fits without truncation.
+   The actual <input> lives inside a Calcite web-component shadow DOM
+   and reads its size from --calcite-font-size--1, so we override that
+   custom property on the search widget's container. */
+.esri-search {
+  --calcite-font-size--1: 0.7rem;
+}
+
+/* Constrain the search widget and its inner Calcite autocomplete to
+   shrink to their content, so the smaller font doesn't leave a gap of
+   empty space to the right of the submit button. */
+.esri-search,
+.esri-search calcite-autocomplete {
+  width: auto;
+  min-width: 0;
+}
+
 #scale-indicator {
   background: #ffffff;
   border-radius: 4px;
