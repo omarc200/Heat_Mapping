@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="128" height="128">
+  <defs>
+    <clipPath id="rounded"><rect width="32" height="32" rx="6"/></clipPath>
+  </defs>
+  <g clip-path="url(#rounded)">
+    <rect y="0"     width="32" height="6.4" fill="#ffffb2"/>
+    <rect y="6.4"   width="32" height="6.4" fill="#fecc5c"/>
+    <rect y="12.8"  width="32" height="6.4" fill="#fd8d3c"/>
+    <rect y="19.2"  width="32" height="6.4" fill="#f03b20"/>
+    <rect y="25.6"  width="32" height="6.4" fill="#bd0026"/>
+  </g>
+  <path d="M 16 7 C 16 7 8 16 8 22 A 8 8 0 0 0 24 22 C 24 16 16 7 16 7 Z"
+        fill="#ffffff" stroke="#0e5fa6" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>

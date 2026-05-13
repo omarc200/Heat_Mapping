@@ -32,7 +32,32 @@ require([
     url: "https://services2.arcgis.com/IsDCghZ73NgoYoz5/arcgis/rest/services/HVIbyCommunityDistrict_ForWeb/FeatureServer/0",
     visible: false,
     title: "Heat Vulnerability Index",
-    opacity: 0.7,
+    opacity: 0.6,
+    // Override the service-side symbology with the ColorBrewer YlOrRd 5-class
+    // ramp — the conventional palette for HVI choropleths and what NYC planners
+    // expect to see. HVI is a discrete 1-5 integer so UniqueValue (not
+    // ClassBreaks) is the right renderer type.
+    renderer: {
+      type: "unique-value",
+      field: "HVI",
+      uniqueValueInfos: [
+        { value: 1, label: "1 — Lowest risk",
+          symbol: { type: "simple-fill", color: "#ffffb2",
+                    outline: { color: [120, 120, 120, 0.6], width: 0.5 } } },
+        { value: 2, label: "2",
+          symbol: { type: "simple-fill", color: "#fecc5c",
+                    outline: { color: [120, 120, 120, 0.6], width: 0.5 } } },
+        { value: 3, label: "3",
+          symbol: { type: "simple-fill", color: "#fd8d3c",
+                    outline: { color: [120, 120, 120, 0.6], width: 0.5 } } },
+        { value: 4, label: "4",
+          symbol: { type: "simple-fill", color: "#f03b20",
+                    outline: { color: [120, 120, 120, 0.6], width: 0.5 } } },
+        { value: 5, label: "5 — Highest risk",
+          symbol: { type: "simple-fill", color: "#bd0026",
+                    outline: { color: [120, 120, 120, 0.6], width: 0.5 } } }
+      ]
+    },
     popupTemplate: {
       title: "Heat Vulnerability Index",
       content: [
@@ -887,7 +912,7 @@ function updateHviState() {
           geometry: clipped,
           symbol: {
             type: "simple-fill",
-            color: [30, 144, 255, 0.15],
+            color: [30, 144, 255, 0.4],
             outline: { color: [30, 100, 220, 0.5], width: 1 }
           },
           popupTemplate: {
