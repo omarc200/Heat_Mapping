@@ -263,7 +263,7 @@ html, body {
   min-width: 0;
 }
 
-#scale-indicator {
+body:not(.manual-page) #scale-indicator {
   background: #ffffff;
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
@@ -321,4 +321,213 @@ html, body {
   margin-top: 32px;
   text-decoration: none;
   font-weight: bold;
+}
+
+/* ==========================================================================
+   USER MANUAL PAGE — EXTENDED STYLES
+   ========================================================================== */
+
+/* Smooth in-page navigation for TOC anchor links and the back-to-top button. */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Header bar at the top of the manual-container holds the top Back-to-Map link
+   so it sits flush at the top-left of the content card, set apart from H1. */
+.manual-header-bar {
+  margin: -8px 0 24px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.manual-header-bar .manual-back-link {
+  margin-top: 0;
+  font-size: 0.9rem;
+  color: #0079c1;
+}
+
+.manual-header-bar .manual-back-link:hover {
+  text-decoration: underline;
+}
+
+/* Bottom Back-to-Map link sits below the body content with extra separation. */
+.manual-back-link-bottom {
+  display: inline-block;
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+  width: 100%;
+  color: #0079c1;
+}
+
+/* Section-heading typography for the long manual. Generous top margins on H2
+   give the document a clear visual rhythm across its many sections, while
+   scroll-margin-top leaves breathing room above anchored headings. */
+.manual-container h2 {
+  font-size: 1.6rem;
+  margin-top: 56px;
+  margin-bottom: 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e5e5;
+  scroll-margin-top: 24px;
+}
+
+.manual-container h3 {
+  font-size: 1.2rem;
+  margin-top: 32px;
+  margin-bottom: 10px;
+  color: #333;
+  scroll-margin-top: 24px;
+}
+
+.manual-container h4 {
+  font-size: 1.0rem;
+  margin-top: 24px;
+  margin-bottom: 8px;
+  color: #555;
+  scroll-margin-top: 24px;
+}
+
+.manual-container p,
+.manual-container li {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.manual-container ul {
+  padding-left: 24px;
+  margin: 8px 0 16px;
+}
+
+.manual-container ul li {
+  margin-bottom: 6px;
+}
+
+.manual-container a {
+  color: #0079c1;
+  text-decoration: none;
+}
+
+.manual-container a:hover {
+  text-decoration: underline;
+}
+
+/* Table of contents — a quiet, neutral block at the top of the document. */
+.manual-toc {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 20px 28px;
+  margin: 0 0 40px 0;
+}
+
+.manual-toc-title {
+  margin: 0 0 12px 0;
+  padding: 0;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.manual-toc-list {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.manual-toc-list > li {
+  margin-bottom: 4px;
+}
+
+.manual-toc-sublist {
+  list-style: lower-alpha;
+  padding-left: 22px;
+  margin: 4px 0 6px;
+  font-size: 0.88rem;
+  color: #555;
+}
+
+.manual-toc-sublist li {
+  margin-bottom: 2px;
+}
+
+.manual-toc a {
+  color: #0079c1;
+  text-decoration: none;
+}
+
+.manual-toc a:hover {
+  text-decoration: underline;
+}
+
+/* Figures: standalone screenshots inserted between paragraphs. */
+.manual-figure {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.manual-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* When a figure paragraph holds multiple images, lay them out side-by-side
+   and let them wrap on narrower viewports. Each image scales to fit. */
+.manual-figure-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.manual-figure-row img {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Back-to-top floating button — hidden until the user scrolls past ~400px. */
+#manual-back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #0079c1;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  z-index: 1000;
+}
+
+#manual-back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+#manual-back-to-top:hover {
+  background: #005f97;
+}
+
+#manual-back-to-top:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 121, 193, 0.4);
 }
